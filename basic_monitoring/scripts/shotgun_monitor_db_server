@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# Override this value if the centos user running the script is not the same as the Postgres super user.
+psql_su=$(whoami)
+
+# Extract some monitoring data and output it.
+function monitor () {
+    # Query active processes
+    postgres_9_0=`bash -c "psql -U shotgun -d postgres -t -c \"select version();\"" | grep -c "PostgreSQL 9\.0"`
+    if [ $postgres_9_0 -eq 0 ]; then
+        active_count=`bash -c "psql -U shotgun -d postgres -t -c \"select count(pid) from pg_stat_activity where state = 'active';\"" | grep -o '[0-9]*'`
+        active_count=$(($active_count - 1))
+    else
+        active_count=`bash -c "psql -U shotgun -d postgres -t -c \"select count(procpid) from pg_stat_activity where current_query != '<IDLE>';\"" | grep -o '[0-9]*'`
+        active_count=$(($active_count - 1))
+    fi
+
+    # Log top output
+    echo "=========================================================="
+    echo "Timestamp: $(date)"
+    echo ""
+    echo "$(top c -b | head -20)"
+    echo ""
+    echo "Active SQL Queries ($active_count):"
+}
+
+function help () {
+    echo "Extract some metrics that help monitors Shotgun Database Server health."
+    echo "Usage:"
+    echo "sh shotgun_monitor_db_server"
+}
+
+# Parse command-line options
+for i in "$@"
+do
+case $i in
+-h|--help)
+    help_mode=1
+    shift
+    ;;
+*)
+    ;;
+esac
+done
+
+if [ -n "$help_mode" ]; then
+    help
+else
+    monitor
+fi

@@ -1,0 +1,5 @@
+/var/log/shotgun/app_server.log {
+  rotate 30
+  compress
+  missingok
+}

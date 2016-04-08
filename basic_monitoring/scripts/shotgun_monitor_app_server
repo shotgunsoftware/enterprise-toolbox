@@ -1,0 +1,45 @@
+#!/bin/sh
+APACHE_ROOT=$($(source /etc/profile && which httpd) -V | grep -oP '(?<=HTTPD_ROOT=\").*(?=\")')
+CONFIG_FILE=$APACHE_ROOT"/conf.d/passenger.conf"
+RUBY_PATH=$(grep -oP '(?<=PassengerDefaultRuby ).*(?=/ruby)' $CONFIG_FILE)
+
+
+# Extract some monitoring data and output it.
+function monitor () {
+    GENERAL_INFO=$(env PATH=$RUBY_PATH:$PATH passenger-status | grep -E 'Max pool size :' -A 2 || true)
+    REQUESTS=$(env PATH=$RUBY_PATH:$PATH passenger-status | grep -E 'Requests in queue:' -B 2 || true)
+
+    #Log the passenger-status informations
+    echo "========================================================="
+    echo "Timestamp : $(date)"
+    echo "$(top c -b | head -20)"
+    echo "--------- General information ---------"
+    echo "$GENERAL_INFO"
+    echo "--------- Requests in queue ---------"
+    echo "$REQUESTS"
+}
+
+function help () {
+    echo "Extract some metrics that help monitors Shotgun Application Server health."
+    echo "Usage:"
+    echo "sudo sh shotgun_monitor_app_server"
+}
+
+# Parse command-line options
+for i in "$@"
+do
+case $i in
+-h|--help)
+    help_mode=1
+    shift
+    ;;
+*)
+    ;;
+esac
+done
+
+if [ -n "$help_mode" ]; then
+    help
+else
+    monitor
+fi

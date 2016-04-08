@@ -1,0 +1,1 @@
+* * * * * root /usr/local/bin/shotgun_monitor_app_server >> /var/log/shotgun/app_server.log 2>&1
