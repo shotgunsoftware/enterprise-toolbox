@@ -31,7 +31,7 @@ ARGF.each_line do |e|
         query[:page_id] = m[1]
       end
     else
-      m = info.match(/ api_user=(.*?) /)
+      m = info.match(/ api_user=(.*)\s/)
  
       if m && m[1]      
         query[:api_user] = m[1]
