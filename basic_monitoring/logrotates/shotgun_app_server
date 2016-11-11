@@ -1,4 +1,4 @@
-/var/log/shotgun/app_server.log {
+/var/log/shotgun_monitoring/app_server.log {
   rotate 30
   compress
   missingok

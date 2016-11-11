@@ -1,2 +1,2 @@
 # Replace shotgun_user by the name of the Shotgun user account
-* * * * * shotgun_user /usr/local/bin/shotgun_monitor_db_server >> /var/log/shotgun/db_server.log 2>&1
+* * * * * shotgun_user /usr/local/bin/shotgun_monitor_db_server >> /var/log/shotgun_monitoring/db_server.log 2>&1
