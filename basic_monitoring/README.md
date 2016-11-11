@@ -18,7 +18,7 @@ For Database Servers:
 On the App Server, execute the following, as the Shotgun admin user:
 
     # Create the log folder. Replace shotgun_user by the name of the Shotgun admin user
-    sudo mkdir -p /var/log/shotgun && sudo chown $shotgun_user:$shotgun_user /var/log/shotgun
+    sudo mkdir -p /var/log/shotgun_monitoring && sudo chown $shotgun_user:$shotgun_user /var/log/shotgun_monitoring
     
     # Copy the monitoring scripts
     sudo cp ./basic_monitoring/scripts/shotgun_monitor_app_server /usr/local/bin && sudo chmod +x /usr/local/bin/shotgun_monitor_app_server
@@ -30,7 +30,7 @@ On the database server, execute the following as the Shotgun admin user (databas
 the application server):
 
     # Create the log folder. Replace shotgun_user by the name of the Shotgun admin user
-    sudo mkdir -p /var/log/shotgun && sudo chown $shotgun_user:$shotgun_user /var/log/shotgun
+    sudo mkdir -p /var/log/shotgun_monitoring && sudo chown $shotgun_user:$shotgun_user /var/log/shotgun_monitoring
     
     # Copy the monitoring scripts
     sudo cp ./basic_monitoring/scripts/shotgun_monitor_db_server /usr/local/bin && sudo chmod +x /usr/local/bin/shotgun_monitor_db_server
@@ -42,5 +42,5 @@ the application server):
 
 ## Logs Location
 
-App server logs: `/var/log/shotgun/app_server.log`  
-DB server logs: `/var/log/shotgun/db_server.log`
+App server logs: `/var/log/shotgun_monitoring/app_server.log`  
+DB server logs: `/var/log/shotgun_monitoring/db_server.log`
