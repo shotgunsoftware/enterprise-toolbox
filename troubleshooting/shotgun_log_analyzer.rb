@@ -10,9 +10,18 @@ STDERR.puts "Parsing the log..."
 
 all_queries = []
 
+def extract_timestamp(log_line)
+  # Sep 19 13:52:22
+  ts_format_1 = log_line.match(/[a-zA-Z]{3} (\d{2}) (\d{2}):(\d{2}):(\d{2})/)
+
+  # 2016-11-17T18:24:30
+  ts_format_2 = log_line.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/)
+
+  return ts_format_1 || ts_format_2
+end
+
 ARGF.each_line do |e|
-  # Extract timestamp
-  m_timestamp = e.match(/[a-zA-Z]{3} (\d{2}) (\d{2}):(\d{2}):(\d{2})/)
+  m_timestamp = extract_timestamp(e)
 
   # Extract output after the contextual information (starting at controller type)
   m = e.match(/SQL\..*?\:(.*?)ms(.*)--(.*)$/)
