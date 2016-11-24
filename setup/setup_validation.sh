@@ -71,6 +71,11 @@ function validate {
     # shotgun user access
     echo "Testing http://rubygems.org"
     curl -sS --fail http://rubygems.org >/dev/null
+
+    # api.rubygems.org end-point is deprecated for rubygems.org/api (301), but still used by some gems it looks like.
+    # The ip is different that the root domain, so it needs to be allowed...
+    echo "Testing http://api.rubygems.org"
+    curl -sS --fail http://api.rubygems.org >/dev/null
     echo "Testing https://github.com"
     curl -sS --fail https://github.com >/dev/null
     echo "Testing http://yum.pgrpms.org"
@@ -87,7 +92,9 @@ function validate {
     # sudo user access
     echo "Testing as sudo - http://rubygems.org"
     sudo curl -sS --fail http://rubygems.org >/dev/null
-    echo "Testing as sudo http://yum.pgrpms.org"
+    echo "Testing as sudo - http://api.rubygems.org"
+    sudo curl -sS --fail http://api.rubygems.org >/dev/null
+    echo "Testing as sudo - http://yum.pgrpms.org"
     sudo curl -sS --fail http://yum.pgrpms.org >/dev/null
 
     sudo ls >/dev/null
