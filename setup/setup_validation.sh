@@ -5,7 +5,6 @@
 # with sudo access that uses the bash shell as it's default.  This server needs access out to the
 # internet, specifically:
 #
-#  https://share.shotgunsoftware.com
 #  svn to https://github.com
 #  http://yum.pgrpms.org
 #  ftp://ftp.ruby-lang.org
@@ -84,8 +83,6 @@ function validate {
     curl -sS --fail http://ftp.ruby-lang.org >/dev/null
     echo "Testing http://production.cf.rubygems.org"
     curl -sS --fail http://production.cf.rubygems.org >/dev/null
-    echo "Testing https://share.shotgunsoftware.com"
-    curl -sS --fail https://share.shotgunsoftware.com >/dev/null
     echo "Testing https://tn123.org"
     curl -sS --fail https://www.tn123.org >/dev/null
 
