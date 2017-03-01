@@ -11,11 +11,14 @@ STDERR.puts "Parsing the log..."
 all_queries = []
 
 def extract_timestamp(log_line)
+  # ignore any invalid characters that cause match to throw an ArgumentError
+  cleaned_line = log_line.force_encoding('UTF-8')
+  
   # Sep 19 13:52:22
-  ts_format_1 = log_line.match(/[a-zA-Z]{3} (\d{2}) (\d{2}):(\d{2}):(\d{2})/)
+  ts_format_1 = cleaned_line.match(/[a-zA-Z]{3} (\d{2}) (\d{2}):(\d{2}):(\d{2})/)
 
   # 2016-11-17T18:24:30
-  ts_format_2 = log_line.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/)
+  ts_format_2 = cleaned_line.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/)
 
   return ts_format_1 || ts_format_2
 end
