@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#######################################################################################
-#  This scripts is doing basic docket on Centos 7 only  #
-#######################################################################################
+###########################################################################
+#  This scripts is doing basic server environment check on Centos 7 only  #
+###########################################################################
 
 set +e
 
 #Postgresql configuration file
-PG_FILE=/var/lib/pgsql/9.*/data/postgresql.conf
+PG_FILE=/var/lib/pgsql/data/postgresql.conf
 
 function showUsage {
     echo "Usage: " `basename "$0"` "[options]"
@@ -27,7 +27,7 @@ function validate {
     echo "=========="
 
     # Hostname
-    printf "Hostname               : %-10s \n" $HOSTNAME
+    printf "Hostname               : %-10s $HOSTNAME\n"
 
     # Os release number checker
     MOSR=`rpm -q --qf "%{VERSION}" $(rpm -q --whatprovides redhat-release)`
@@ -64,7 +64,7 @@ function validate {
 
     # CPU model
     CPU=`cat /proc/cpuinfo |grep "model name" |awk -F: '{print $2}'| uniq`
-    printf "CPU model              :$CPU\n"
+    printf "CPU model              :%-10s $CPU\n"
 
     # Number of CPU
     NCPU=`cat /proc/cpuinfo |grep "model name" |awk -F: '{print $2}'| wc -l`
@@ -162,9 +162,10 @@ function validate {
     echo -e "\nDATABASE INFO"
     echo "==============="
     export OVER="NO"
-    if (rpm -qa|grep postgres); then
+    PGCHECK=`rpm -qa|grep postgres`
+    if [ -n "$PGCHECK" ];then
     STATUS=`systemctl status postgresql.service|grep active|awk '{print $2}'`
-	if [ $STATUS = 'active' ];then
+	if [ "$STATUS" = 'active' ];then
 	    export OVER="YES"
 	else
 	    export OVER="NO"
@@ -177,7 +178,7 @@ function validate {
     # Postgres parameters
     if sudo test -f $PG_FILE; then 
 	printf "\nPostgres parameters:\n"
-	sudo cat /var/lib/pgsql/9.*/data/postgresql.conf|grep -E 'shared_buffers|work_mem|maintenance_work_mem|vacuum_cost_delay|effective_cache_size|max_connections|statement_timeout'|uniq
+	sudo cat $PG_FILE|grep -E 'shared_buffers|work_mem|maintenance_work_mem|vacuum_cost_delay|effective_cache_size|max_connections|statement_timeout'|uniq
     else
 	export OVER="NONE"
 	printf "Postgres parameters    : %-10s\n" $OVER
@@ -202,9 +203,12 @@ sudo docker run hello-world
 sudo pip install docker-compose
 }
 
-# Parse command-line options
+unset usage
+
+#Parse command-line options
 for i in "$@"
 do
+usage='1'
 case $i in
 -v|--verbose)
     set -x
@@ -223,9 +227,13 @@ case $i in
     shift
     ;;
 *)
+    showUsage
     ;;
 esac
 done
 
-
-
+if [ -z "$usage" ]
+then
+    showUsage
+    exit 0
+fi
