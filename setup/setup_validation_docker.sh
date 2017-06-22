@@ -180,7 +180,7 @@ function validate {
             echo -e "-------------------"
             sudo cat $PG_CONF_FILE|grep -E 'shared_buffers|work_mem|maintenance_work_mem|vacuum_cost_delay|effective_cache_size|max_connections|statement_timeout'|uniq
         else
-            echo "Unable to local PostgreSQL config file."
+            echo "Unable to find PostgreSQL config file."
         fi
     else
         echo "PostgreSQL server is not installed."
