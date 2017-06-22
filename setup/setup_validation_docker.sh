@@ -6,9 +6,6 @@
 
 set +e
 
-#Postgresql configuration file
-PG_FILE=/var/lib/pgsql/data/postgresql.conf
-
 function showUsage {
     echo "Usage: " `basename "$0"` "[options]"
     echo -e "\t[--validate]          Validate server configuration"
@@ -161,27 +158,32 @@ function validate {
     # DATABASE INFO
     echo -e "\nDATABASE INFO"
     echo "==============="
-    export OVER="NO"
-    PGCHECK=`rpm -qa|grep postgres`
-    if [ -n "$PGCHECK" ];then
-    STATUS=`systemctl status postgresql.service|grep active|awk '{print $2}'`
-        if [ "$STATUS" = 'active' ];then
-            export OVER="YES"
+    POSTGRES_SERVICE=`systemctl list-unit-files | grep postgresql | awk  '{ print $1 }'`
+    # Remove .service suffix
+    POSTGRES_SERVICE=${POSTGRES_SERVICE%.service}
+
+    if [ -n "$POSTGRES_SERVICE" ]; then
+        POSTGRES_STATUS="Inactive"
+
+        if systemctl status $POSTGRES_SERVICE > /dev/null; then
+            POSTGRES_STATUS="Running"
+        fi
+
+        printf "%-22s:  %-10s\n" $POSTGRES_SERVICE $POSTGRES_STATUS
+
+        #Postgresql configuration file
+        POSTGRES_VERSION=${POSTGRES_SERVICE/postgresql-/}
+        PG_CONF_FILE=/var/lib/pgsql/$POSTGRES_VERSION/data/postgresql.conf
+
+        if sudo test -f $PG_CONF_FILE; then
+            echo -e "\nPostgres parameters"
+            echo -e "-------------------"
+            sudo cat $PG_CONF_FILE|grep -E 'shared_buffers|work_mem|maintenance_work_mem|vacuum_cost_delay|effective_cache_size|max_connections|statement_timeout'|uniq
         else
-            export OVER="NO"
+            echo "Unable to local PostgreSQL config file."
         fi
     else
-        echo "Postgres is not installed."
-    fi
-    printf "PostgreSQL-running     : %-10s %-10s\n" $OVER $STATUS
-
-    # Postgres parameters
-    if sudo test -f $PG_FILE; then 
-        printf "\nPostgres parameters:\n"
-        sudo cat $PG_FILE|grep -E 'shared_buffers|work_mem|maintenance_work_mem|vacuum_cost_delay|effective_cache_size|max_connections|statement_timeout'|uniq
-    else
-        export OVER="NONE"
-        printf "Postgres parameters    : %-10s\n" $OVER
+        echo "PostgreSQL server is not installed."
     fi
 }
 
