@@ -84,7 +84,7 @@ function validate {
     printf "RAM                    : %-10s %-10sKB\n" $OVER $MEM
 
     # SELinux check
-    printf "SE Linux               : %-10s\n" `getenforce`
+    printf "SE Linux               : %-10s %-10s\n" '' `getenforce`
 
     echo -e "\nDOCKER"
     echo "======"
