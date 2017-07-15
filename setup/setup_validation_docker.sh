@@ -84,11 +84,7 @@ function validate {
     printf "RAM                    : %-10s %-10sKB\n" $OVER $MEM
 
     # SELinux check
-    export OVER="OK"
-    if [ ! \( `getenforce` == "Permissive" -o `getenforce` == "Disabled" \) ]; then
-        export OVER="BAD"
-    fi
-    printf "SE Linux               : %-10s %-10s\n" $OVER `getenforce`
+    printf "SE Linux               : %-10s %-10s\n" '' `getenforce`
 
     echo -e "\nDOCKER"
     echo "======"
