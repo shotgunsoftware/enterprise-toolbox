@@ -44,15 +44,10 @@ fi
 # ENVIRONMENT VARIABLES
 #
 
-# Postgres 9.3
-export SG_PGSQL_VER=93
-export SG_PGSQL_VER_DOT=9.3
-export SG_PGSQL_DISTRO=pgdg-${DISTRO}${SG_PGSQL_VER}-${SG_PGSQL_VER_DOT}-3.noarch.rpm
-
 # Postgres 9.6
-#export SG_PGSQL_VER=96
-#export SG_PGSQL_VER_DOT=9.6
-#export SG_PGSQL_DISTRO=pgdg-${DISTRO}${SG_PGSQL_VER}-${SG_PGSQL_VER_DOT}-3.noarch.rpm
+export SG_PGSQL_VER=96
+export SG_PGSQL_VER_DOT=9.6
+export SG_PGSQL_DISTRO=pgdg-${DISTRO}${SG_PGSQL_VER}-${SG_PGSQL_VER_DOT}-3.noarch.rpm
 
 # You can modify this folder to initialize a Shotgun ready database in a custom location.
 # You will also need to modify your systemd configuration for the PostgreSQL service so the good data folder is used.
@@ -77,7 +72,7 @@ function install_pgdg() {
   sudo yum install -y wget
 
   cd $DOWNLOAD_DIR
-  wget https://download.postgresql.org/pub/repos/yum/${SG_PGSQL_VER_DOT}/redhat/rhel-6-x86_64/${SG_PGSQL_DISTRO}
+  wget https://download.postgresql.org/pub/repos/yum/${SG_PGSQL_VER_DOT}/redhat/rhel-7-x86_64/${SG_PGSQL_DISTRO}
   sudo rpm -Uvh --replacepkgs ${SG_PGSQL_DISTRO}
 }
 
