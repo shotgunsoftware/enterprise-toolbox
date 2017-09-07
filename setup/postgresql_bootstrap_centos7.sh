@@ -13,7 +13,7 @@ MYSHELL=$(ps -p "$$"|grep bash)
 if [ -n "$MYSHELL" ]; then
   echo  "Current shell is BASH, continue..."
 else
-  echo "Current shell is not BASH, please set bash as current shell and rerun this script. You can also try to run 'bash install_centos6.sh'"
+  echo "Current shell is not BASH, please set bash as current shell and rerun this script. You can also try to run 'bash postgresql_bootstrap_centos7.sh'"
   exit 1
 fi
 
@@ -36,7 +36,7 @@ MOSR=`rpm -q --qf "%{VERSION}" $(rpm -q --whatprovides redhat-release)`
 if (( $(echo "$MOSR == 7" |bc -l) )); then
    echo "RHEL 7/CentOS 7 detected ... continue installation"
 else
-   echo "RHEL 6/CentOS 6 does not detected ... installation canceled"
+   echo "RHEL 7/CentOS 7 not detected ... installation canceled"
    exit 1
 fi
 
