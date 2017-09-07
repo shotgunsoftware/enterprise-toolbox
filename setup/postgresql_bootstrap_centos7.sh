@@ -13,7 +13,7 @@ MYSHELL=$(ps -p "$$"|grep bash)
 if [ -n "$MYSHELL" ]; then
   echo  "Current shell is BASH, continue..."
 else
-  echo "Current shell is not BASH, please set bash as current shell and rerun this script. You can also try to run 'bash install_centos6.sh'"
+  echo "Current shell is not BASH, please set bash as current shell and rerun this script. You can also try to run 'bash postgresql_bootstrap_centos7.sh'"
   exit 1
 fi
 
@@ -36,7 +36,7 @@ MOSR=`rpm -q --qf "%{VERSION}" $(rpm -q --whatprovides redhat-release)`
 if (( $(echo "$MOSR == 7" |bc -l) )); then
    echo "RHEL 7/CentOS 7 detected ... continue installation"
 else
-   echo "RHEL 6/CentOS 6 does not detected ... installation canceled"
+   echo "RHEL 7/CentOS 7 not detected ... installation canceled"
    exit 1
 fi
 
@@ -44,15 +44,10 @@ fi
 # ENVIRONMENT VARIABLES
 #
 
-# Postgres 9.3
-export SG_PGSQL_VER=93
-export SG_PGSQL_VER_DOT=9.3
-export SG_PGSQL_DISTRO=pgdg-${DISTRO}${SG_PGSQL_VER}-${SG_PGSQL_VER_DOT}-3.noarch.rpm
-
 # Postgres 9.6
-#export SG_PGSQL_VER=96
-#export SG_PGSQL_VER_DOT=9.6
-#export SG_PGSQL_DISTRO=pgdg-${DISTRO}${SG_PGSQL_VER}-${SG_PGSQL_VER_DOT}-3.noarch.rpm
+export SG_PGSQL_VER=96
+export SG_PGSQL_VER_DOT=9.6
+export SG_PGSQL_DISTRO=pgdg-${DISTRO}${SG_PGSQL_VER}-${SG_PGSQL_VER_DOT}-3.noarch.rpm
 
 # You can modify this folder to initialize a Shotgun ready database in a custom location.
 # You will also need to modify your systemd configuration for the PostgreSQL service so the good data folder is used.
@@ -77,7 +72,7 @@ function install_pgdg() {
   sudo yum install -y wget
 
   cd $DOWNLOAD_DIR
-  wget https://download.postgresql.org/pub/repos/yum/${SG_PGSQL_VER_DOT}/redhat/rhel-6-x86_64/${SG_PGSQL_DISTRO}
+  wget https://download.postgresql.org/pub/repos/yum/${SG_PGSQL_VER_DOT}/redhat/rhel-7-x86_64/${SG_PGSQL_DISTRO}
   sudo rpm -Uvh --replacepkgs ${SG_PGSQL_DISTRO}
 }
 
