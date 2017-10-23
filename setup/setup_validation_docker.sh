@@ -134,6 +134,20 @@ function validate {
     fi
     printf "Docker-status          : %-10s %-10s\n" $OVER $STATUS
 
+    # Docker listening over network
+    export OVER="BAD"
+    DRUN=`rpm -qa|grep docker`
+    if [ -n "$DRUN" ]; then
+    DOCKERD_HOST=`systemctl status docker.service|grep -oE "host=tcp://0.0.0.0:2376"`
+        if [ $STATUS = 'active' ];then
+            export OVER="OK"
+        else
+            export OVER="BAD"
+        fi
+    else
+        echo "Docker is not installed. Please install." `basename "$0"` "--help"
+    fi
+    printf "Docker listening over  : %-10s %-10s\n" $OVER $DOCKERD_HOST
 
 
     # ADDITIONAL INFO
@@ -194,6 +208,9 @@ function install_all {
 
     # Install docker
     sudo yum -y install docker-ce python2-pip
+    sudo mkdir -p /etc/systemd/system/docker.service.d
+    echo -e "[Service]\nExecStart=\nExecStart=/usr/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2376" | sudo tee /etc/systemd/system/docker.service.d/override.conf > /dev/null
+    sudo systemctl daemon-reload
     sudo systemctl start docker
     sudo systemctl enable docker
     sudo docker run hello-world
