@@ -194,6 +194,7 @@ function install_all {
 
     # Install docker
     sudo yum -y install docker-ce python2-pip
+    sudo pip install --upgrade pip
     sudo systemctl start docker
     sudo systemctl enable docker
     sudo docker run hello-world
