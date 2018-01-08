@@ -2,22 +2,25 @@
 #. ./Shotgun_Config.sh
 
 ###Shotgun Versions
-APPVER="7.4.3.0"
+APPVER="7.5.2.0"
 TSVER="5.0.7"
 TWVER="8.2.5"
 SECVER="1.2.1"
 
-###Globle configuration
-SHOTGUN_SITE_URL="sg.autodesk.com"
-VOLUMES="\/ABC" #Have to use \/ to represent /
-ENABLEEMAILER=0 #1=uncomment emailnotifier 0=don't change
-ENABLETRANSCODER=0 #1=uncomment transcoder 0=don't change
-ENABLEPROXY=0 #1=uncomment proxy 0=don't change
+###Customer OpenVPN
+OVPNFILENAME="" #Leave it blank if you don't want to install OpenVPN Client
 
 ###Standalone Postgresql Configuration
-ENABLEPGSQL=0 #1=uncomment Postgresql 0=don't change
-POSTGRES_HOST=""
-POSTGRES_PASSWORD=""
+POSTGRES_HOST="" #Leave if blank if you don't use standalone DB
+POSTGRES_PASSWORD="" #Leave if blank if you don't use standalone DB
+
+###Globle configuration
+SHOTGUN_SITE_URL="sg.autodesk.com"
+VOLUMES="\/ABC\/cfg" #Have to use \/ to represent /
+ENABLEEMAILER=1 #1=uncomment emailnotifier 0=don't change
+ENABLETRANSCODER=1 #1=uncomment transcoder 0=don't change
+ENABLEPROXY=0 #1=uncomment proxy 0=don't change
+
 
 ####Define folders
 TMP="/usr/tmp"
@@ -52,6 +55,81 @@ SECTAR="shotgun-docker-sec-${SECVER}.tar.gz"
 SEC="shotgun-docker-sec-${SECVER}.tar"
 SECIMG="shotgun-docker-sec"
 
+###Security Settings
+
+function _secur {
+  ###Disable firewall
+  echo "Disable firewalld ..."
+  systemctl stop firewalld
+  systemctl disable firewalld
+  echo "firewalld is disabled."
+  echo
+
+  ###Disable SELinux
+  echo "Disable selinux ..."
+  SElinuxConfig="/etc/selinux/config"
+  SEconfig1="SELINUX=enforcing"
+  SEconfig2="SELINUX=permissive"
+  SEconfig3="SELINUX=disabled"
+  SESTAT=`getenforce`
+  if [[ $SESTAT == "Permissive" ]]; then
+    sed -i "s/${SEconfig2}/${SEconfig3}/g" $SElinuxConfig
+  fi
+  if [[ $SESTAT == "Enforcing" ]]; then
+    sed -i "s/${SEconfig1}/${SEconfig3}/g" $SElinuxConfig
+  fi
+  echo "Selinux is disabled. Please reboot."
+  echo
+}
+
+###Install Client VPN
+function _clientvpn {
+  OVPNENV='Environment=\"OPENSSL_ENABLE_MD5_VERIFY=1 NSS_HASH_ALG_SUPPORT=+MD5\"'
+  OVPNCLIENTSERVICE="/usr/lib/systemd/system/openvpn-client@.service"
+  OVPNSVC="[Service]"
+  OVPNCFGPATH="/etc/openvpn/client/"
+  OVPNFILEEXT=".conf"
+  CLTFNAME=$OVPNFILENAME$OVPNFILEEXT
+  
+  echo "Configuring OpenVPN ..."
+  yum install -y openvpn openssl openssl098e.x86_64
+  yum update -y all
+
+  SVCLIN=$(sed -n "/$OVPNENV/=" $OVPNCLIENTSERVICE);
+  if [[ $SVCLIN == "" ]]; then
+    SVCLIN==$(sed -n "/$OVPNSVC/=" $OVPNCLIENTSERVICE);
+    sed -i "/${OVPNSVC}/a ${OVPNENV}" $OVPNCLIENTSERVICE
+    systemctl daemon-reload
+  fi
+
+  if [[ ! -f $OVPNCFGPATH$OVPNFILENAME$OVPNFILEEXT ]]; then
+    cp $CLTFNAME $OVPNCFGPATH$CLTFNAME
+  fi
+
+  systemctl enable openvpn-client@$OVPNFILENAME
+  systemctl start openvpn-client@$OVPNFILENAME
+  echo
+}
+
+###Add sudoers
+function _add_sudoer {
+  USERNAME="shotgun"  
+  SGUSER="${USERNAME}	ALL=(ALL)	NOPASSWD: ALL"
+  SUDOER="/etc/sudoers"
+  SGPASSWORD="password"
+
+  echo "Add sudoer"
+  if [ ! -d /home/shotgun ]; then
+    /usr/sbin/useradd -p `openssl passwd -1 $SGPASSWORD` USERNAME
+  fi
+
+  SUDOLIN=$(sed -n "/$SGUSER/=" $SUDOER);
+  if [[ $SUDOLIN == "" ]]; then
+    echo $SGUSER >> $SUDOER
+  fi
+}
+
+###untar all packages
 function _untar {
   echo "Extracting ${1} ..."
   echo "Extracted file is ${2}"
@@ -100,8 +178,7 @@ function _edityml {
     EM1="emailnotifier:"
     EMLN1=$(sed -n "/$EM1/=" $1);
     let EMLN2=EMLN1+13
-    sed -i "$EMLN1,$EMLN2 s/^..#//g" $1
-    sed -i "$EMLN1,$EMLN2 s/^/ /g" $1
+    sed -i "$EMLN1,$EMLN2 s/^..#/ /g" $1
     echo
   fi
 
@@ -132,7 +209,7 @@ function _edityml {
     echo
   fi
 
-  if [[ $ENABLEPGSQL == 1 ]]; then 
+  if [ ! $POSTGRES_HOST == "" ] && [ ! $POSTGRES_PASSWORD == "" ]; then 
     echo "Enable Postgresql ..."
     PGSQL="POSTGRES_HOST: db"
     PGHOST="POSTGRES_HOST: "$POSTGRES_HOST
@@ -151,6 +228,8 @@ function _edityml {
     sed -i "s/${DBPWOLD}/${DBPWNEW}/g" $1
     sed -i "s/${DBOPPW}/${DBOPPWNEW}/g" $1
 
+    sed -i "s/- db/#- db/g" $1
+
     echo "Disable Postgresql in YML ..."
     DB1="db:"
     DBLN1=$(sed -n "/$DB1/=" $1);
@@ -160,7 +239,30 @@ function _edityml {
   fi
 }
 
+#### add shotgun sec
+function _sec_start_script {
+  SECRUN="/etc/systemd/system/secstart.service"
+  SRC="secstart.service"
+  echo "Checking if SEC startup exist"
+  if [[ ! -f $SECRUN ]]; then
+    echo "cp ${SRC} ${SECRUN}"
+    cp $SRC $SECRUN 
+    systemctl enable secstart
+  fi
+}
+
 function _start {
+  ###Change System Security Settings
+  _secur
+
+  ###Install OpenVPN
+  if [ ! $OVPNFILENAME == "" ]; then
+    _clientvpn
+  fi
+  
+  ###Add shotgun user and add to sudoer
+  _add_sudoer
+
   ###Extracting all files
   _untar $TMP/$DCTAR $SGDIR/$DC
   _untar $TMP/$TCSTAR $TSDIR/$TCS
@@ -179,6 +281,9 @@ function _start {
   _dcload $TWDIR $TCW $TWIMG
   _dcload $SECDIR $SEC $SECIMG
 
+  ###Add sec service and start up
+  _sec_start_script
+  
   ###Create production folder
   echo "Creating productoin folder ..."
   if [[ ! -d $SGDIR/$PUD ]]; then

@@ -1,0 +1,16 @@
+[Unit]
+Description=secstart
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/shotgun/sec
+ExecStart=/usr/bin/docker-compose up -d
+Restart=always
+User=root
+Group=root
+LimitNOFILE=10240
+LimitFSIZE=infinity
+
+[Install]
+WantedBy=multi-user.target
