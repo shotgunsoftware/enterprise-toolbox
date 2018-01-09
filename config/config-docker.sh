@@ -2,7 +2,7 @@
 #. ./Shotgun_Config.sh
 
 ###Shotgun Versions
-APPVER="7.5.2.0"
+APPVER="7.6.0.0"
 TSVER="5.0.7"
 TWVER="8.2.5"
 SECVER="1.2.1"
@@ -11,8 +11,7 @@ SECVER="1.2.1"
 OVPNFILENAME="" #Leave it blank if you don't want to install OpenVPN Client
 
 ###Standalone Postgresql Configuration
-POSTGRES_HOST="" #Leave if blank if you don't use standalone DB
-POSTGRES_PASSWORD="" #Leave if blank if you don't use standalone DB
+POSTGRES_HOST="192.168.0.31" #Leave if blank if you don't use standalone DB
 
 ###Globle configuration
 SHOTGUN_SITE_URL="sg.autodesk.com"
@@ -120,7 +119,7 @@ function _add_sudoer {
 
   echo "Add sudoer"
   if [ ! -d /home/shotgun ]; then
-    /usr/sbin/useradd -p `openssl passwd -1 $SGPASSWORD` USERNAME
+    /usr/sbin/useradd -p `openssl passwd -1 $SGPASSWORD` $USERNAME
   fi
 
   SUDOLIN=$(sed -n "/$SGUSER/=" $SUDOER);
@@ -209,8 +208,14 @@ function _edityml {
     echo
   fi
 
-  if [ ! $POSTGRES_HOST == "" ] && [ ! $POSTGRES_PASSWORD == "" ]; then 
+  if [ ! $POSTGRES_HOST == "" ]; then 
     echo "Enable Postgresql ..."
+    PGSQLFILE="/var/lib/pgsql/9.6/data/pg_hba.conf"
+    PGIP1="all all 172.18"
+    PGIP1F="host  all all 172.18.0.0/24 md5"
+    PGIP2="all all 172.19"
+    PGIP2F="host  all all 172.19.0.0/24 md5"
+    POSTGRES_PASSWORD=`sed -n 's/^.*shotgun://p' /root/.pgpass` 
     PGSQL="POSTGRES_HOST: db"
     PGHOST="POSTGRES_HOST: "$POSTGRES_HOST
     DBPWOLD="#POSTGRES_PASSWORD: dummy"
@@ -219,22 +224,54 @@ function _edityml {
     DBOPHOSTNEW="PGHOST: "$POSTGRES_HOST
     DBOPPW="#PGPASSWORD: dummy"
     DBOPPWNEW="PGPASSWORD: "$POSTGRES_PASSWORD
-
+    
     echo "Changing DB hostname ..."
     sed -i "s/${PGSQL}/${PGHOST}/g" $1 
     sed -i "s/${DBOPHOST}/${DBOPHOSTNEW}/g" $1 
 
-    echo "Changing Postgresql password ... "
+    echo "Adding Postgresql password in docker-compose.yml... "
     sed -i "s/${DBPWOLD}/${DBPWNEW}/g" $1
     sed -i "s/${DBOPPW}/${DBOPPWNEW}/g" $1
+    echo "Password added"
+    echo
 
-    sed -i "s/- db/#- db/g" $1
+    ###Comment out db dependency
+    CDBLN1=$(sed -n "/#- db/=" $1);
+    echo $DCBLN1
+    if [[ $CDBLN1 == "" ]]; then
+      sed -i "s/- db/#- db/g" $1
+    fi
+
+    echo "Add Docker Container IP to pg_hba.conf"
+    PGDBIPLN1=$(sed -n "/$PGIP1/=" $PGSQLFILE);
+    echo $PGDBIPLN1
+    if [[ $PGDBIPLN1 == "" ]]; then
+      echo $PGIP1F >> $PGSQLFILE
+    else
+      echo "Docker Container IP existed"
+    fi
+
+    PGDBIPLN1=$(sed -n "/$PGIP2/=" $PGSQLFILE);
+    echo $PGDBIPLN1
+    if [[ $PGDBIPLN1 == "" ]]; then
+      echo "Add Docker Container IP to pg_hba.conf"
+      echo $PGIP2F >> $PGSQLFILE
+    else
+      echo "Docker Container IP existed"
+    fi
+    echo "Done"
+
+    systemctl restart postgresql-9.6 
 
     echo "Disable Postgresql in YML ..."
-    DB1="db:"
-    DBLN1=$(sed -n "/$DB1/=" $1);
-    let PRLN2=DBLN1+7
-    sed -i "$DBLN1,$PRLN2 s/^/#/g" $1
+    CDBSLN1=$(sed -n "/#  db:/=" $1);
+    echo $CDBSLN1
+    if [[ $CDBSLN1 == "" ]]; then
+      DB1="db:"
+      DBLN1=$(sed -n "/$DB1/=" $1);
+      let PRLN2=DBLN1+7
+      sed -i "$DBLN1,$PRLN2 s/^/#/g" $1
+    fi
     echo
   fi
 }
@@ -248,6 +285,7 @@ function _sec_start_script {
     echo "cp ${SRC} ${SECRUN}"
     cp $SRC $SECRUN 
     systemctl enable secstart
+    systemctl start secstart
   fi
 }
 
@@ -297,6 +335,12 @@ function _start {
   ###Edit docker-compose.yml
   echo "Editing ${DCYML} ..."
   _edityml $SGDIR/$PUD/$DCYML
+
+  ###Install NTP
+  yum install ntpdate -y && ntpdate pool.ntp.org
+
+  ###Install screen
+  yum install -y screen
 }
 
 
