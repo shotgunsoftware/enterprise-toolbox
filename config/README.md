@@ -1,6 +1,8 @@
-**Untar docker-shotgun* images**
-**Load shotgun images**
-**Modify docker-compose.yml**
+ **Untar docker-shotgun* images**
+ 
+ **Load shotgun images**
+ 
+ **Modify docker-compose.yml**
   - Uncomment 
     - transcoder server
     - transcoder worker
@@ -10,7 +12,7 @@
     - POSTGRESQL_HOST
     - OVPNFILENAME 
 
-#Tested
+**Tested**
   - Docker Release 7.6.0.0
   - Docker Release 7.5.2.0
   - Docker Release 7.4.3.0
