@@ -11,11 +11,11 @@ SECVER="1.2.1"
 OVPNFILENAME="" #Leave it blank if you don't want to install OpenVPN Client
 
 ###Standalone Postgresql Configuration
-POSTGRES_HOST="192.168.0.31" #Leave if blank if you don't use standalone DB
+POSTGRES_HOST="" #Leave if blank if you don't use standalone DB
 
 ###Globle configuration
 SHOTGUN_SITE_URL="sg.autodesk.com"
-VOLUMES="\/ABC\/cfg" #Have to use \/ to represent /
+VOLUMES="" #Have to use \/ to represent /
 ENABLEEMAILER=1 #1=uncomment emailnotifier 0=don't change
 ENABLETRANSCODER=1 #1=uncomment transcoder 0=don't change
 ENABLEPROXY=0 #1=uncomment proxy 0=don't change
