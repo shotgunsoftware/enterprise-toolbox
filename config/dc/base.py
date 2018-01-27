@@ -5,7 +5,7 @@ import commands,re,socket
 
 class global_data(object):
     '''Define global data'''
-    temp_folder = '../../images/'#'/usr/tmp/'
+    temp_folder = '/usr/tmp/'
     opt='/opt/'
     shotgun_home = opt + 'shotgun/'
     dc_cmd = 'docker-compose'
