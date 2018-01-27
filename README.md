@@ -17,3 +17,8 @@ of this script is a good starting point to troubleshoot performance issues relat
 in the script header.
 
 [Shotgun Log Analysis](./troubleshooting/shotgun_log_analyzer.rb)
+
+## Docker Setup
+Create setup menu for Shotgun Docker version.
+
+[Config](./config)

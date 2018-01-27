@@ -1,6 +1,6 @@
- **Command to run**
+# How to use
 
-*sudo python setup.py*
+### sudo python setup.py
  
 - 0: Exit
 - 1: Create shotgun user & Configure system security.
