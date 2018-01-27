@@ -1,5 +1,7 @@
 '''Define basic fucntion'''
 import os, sys
+from os import path
+import glob
 import tarfile
 import commands,re,socket
 
@@ -248,5 +250,30 @@ class Base(object):
         print 'Find host ip address'
         return localip
 
+    def getfilesfromtempfolder(self, tempfolder,filterstring):
+        files = glob.glob("%s/%s*.tar.gz" % (tempfolder, filterstring))
+        sgfiles=[]
+        for fname in files[::-1]:
+            f = os.path.basename(fname)
+            print f
+            sgfiles.append(f)
+        return sgfiles
+        
+    def getappversion(self, tempfolder, filterstring, version_list):
+        sgfiles=self.getfilesfromtempfolder(tempfolder,filterstring)
+        result = ""
+        for filename in sgfiles:
+            digs=[int(s) for s in filename if s.isdigit()]
+            version = ""
+            for i in range(len(digs)):
+                version=version + str(digs[i])
+                if not i == len(digs) - 1:
+                    version = version + "."
+            if version in version_list:
+                return version
+        
+        return result
+
+            
     def setup(self):
         pass

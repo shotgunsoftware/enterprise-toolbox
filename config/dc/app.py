@@ -29,10 +29,17 @@ class App(base.Base):
         self.p.printhead('Preparing to install %s ...' %(self.__class__.__name__))
 
     def setVersion(self):
-        prompt ='%s Version (%s): ' % (self.__class__.__name__, versions.app_supported[0])
-        ver = self.p.getinput(prompt)
-        if ver == "":
+        version = self.getappversion(self.gdata.temp_folder, "shotgun-docker-se-", versions.app_supported[0])
+        if version == "":
+            self.p.printfail('Can\'t find shotgun application software in the folder. Please make sure you have copy the file in the folder')
+            prompt ='%s Version (%s): ' % (self.__class__.__name__, versions.app_supported[0])
+            ver = self.p.getinput(prompt)
             ver = versions.app_supported[0]
+        else:
+            prompt ='%s Version: %s' % (self.__class__.__name__, version)
+            ver = self.p.getinput(prompt)
+            if ver == "":
+                ver = version
 
         if self.p.validate_version(ver, versions.app_supported):
             self.p.printsuc('%s Version %s is validated' % (self.__class__.__name__, ver))

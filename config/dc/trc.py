@@ -45,11 +45,19 @@ class TranscoderService(base.Base):
         return self.gdata.getTempfolder() + self.worker_gzfile
 
     def setWorkerVersion(self):
-        prompt ='%s Version (%s): ' % ('transcoder worker', versions.worker_supported[0])
-        ver = self.p.getinput(prompt)
-        if ver == "":
-            ver = versions.worker_supported[0]
-
+        version = self.getappversion(self.gdata.temp_folder, "shotgun-docker-se-transcoder-worker", versions.worker_supported)
+        if version == "":
+            self.p.printfail('Can\'t find shotgun application software in the folder. Please make sure you have copy the file in the folder')
+            prompt ='%s Version (%s): ' % ('transcoder worker', versions.worker_supported[0])
+            ver = self.p.getinput(prompt)
+            if ver == "":
+                ver = versions.worker_supported[0]
+        else:
+            prompt ='%s Version: %s' % ('transcoder worker', version)
+            ver = self.p.getinput(prompt)
+            if ver == "":
+                ver = version
+            
         if self.p.validate_version(ver, versions.worker_supported):
             self.p.printsuc('%s Version %s is validated' % ('transcoder worker', ver))
             versions.worker_version = ver
@@ -61,10 +69,18 @@ class TranscoderService(base.Base):
         return self.worker_version
 
     def setServerVersion(self):
-        prompt ='%s Version (%s): ' % ('transcoder server', versions.server_supported[0])
-        ver = self.p.getinput(prompt)
-        if ver == "":
-            ver = versions.server_supported[0]
+        version = self.getappversion(self.gdata.temp_folder, "shotgun-docker-se-transcoder-server", versions.server_supported)
+        if version == "":
+            self.p.printfail('Can\'t find shotgun application software in the folder. Please make sure you have copy the file in the folder')
+            prompt ='%s Version (%s): ' % ('transcoder server', versions.server_supported[0])
+            ver = self.p.getinput(prompt)
+            if ver == "":
+                ver = versions.server_supported[0]
+        else:
+            prompt ='%s Version: %s' % ('transcoder server', version)
+            ver = self.p.getinput(prompt)
+            if ver == "":
+                ver = version
 
         if self.p.validate_version(ver, versions.server_supported):
             self.p.printsuc('%s Version %s is validated' % ('transcoder server', ver))
