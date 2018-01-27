@@ -1,7 +1,7 @@
 #!/usr/bin/python
 '''Basic setup'''
 import os
-from dc import base, config, app, trc, sec
+from dc import base, config, app, trc, sec, monitor
 
 gd = base.global_data()
 p = base.pub()
@@ -9,17 +9,18 @@ c=config.Conf(gd, p)
 a=app.App(gd, p)
 t=trc.TranscoderService(gd, p)
 s=sec.SEC(gd, p)
+m=monitor.Monitor()
 
 menu = {}
-menu['1']="Create %s user & Configure system security.\n" % (gd.shotgun_user)
-menu['2']="Extract & load [shotgun app image] [transcoder images].\n"
-menu['3']="Setup shotgun enterprise console.\n"
-menu['4']="Configure production yml [app] [db] [dbops] [transcoder services].\n"
-menu['5']="Start shotgun enterprise production server.\n"
-menu['6']="Configure staging yml.\n"
-menu['7']="Re-configure standalone postgresql for production server.\n"
-menu['8']="Reset production server password to %s\n" % (gd.SHOTGUN_ADMIN_PW)
-menu['0']="Exit\n"
+menu['1']="Create %s user & Configure system security." % (gd.shotgun_user)
+menu['2']="Extract & load [shotgun app image] [transcoder images]."
+menu['3']="Setup shotgun enterprise console."
+menu['4']="Configure production yml [app] [db] [dbops] [transcoder services]."
+menu['5']="Start shotgun enterprise production server."
+menu['6']="Configure staging yml."
+menu['7']="Reset shotgun server password to %s" % (gd.SHOTGUN_ADMIN_PW)
+menu['8']="Setup basic monitor"
+menu['0']="Exit"
 while True: 
     os.system('clear')
     options=menu.keys()
@@ -65,14 +66,14 @@ while True:
         t.editstagingyml()
         selection=raw_input("\nPress any key ...") 
     elif selection == '7':
-        '''Re-configure standalone for production server.'''
-        os.system('clear')
-        a.setupdb()
-        selection=raw_input("\nPress any key ...") 
-    elif selection == '8':
         '''Reset production server password'''
         os.system('clear')
         a.setpassword()
+        selection=raw_input("\nPress any key ...") 
+    elif selection == '8':
+        '''Setup basic monitor'''
+        os.system('clear')
+        m.setup()
         selection=raw_input("\nPress any key ...") 
     elif selection == '0': 
         os.system('clear')

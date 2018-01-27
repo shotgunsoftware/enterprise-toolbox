@@ -5,7 +5,7 @@ import commands,re,socket
 
 class global_data(object):
     '''Define global data'''
-    temp_folder = '/usr/tmp/'
+    temp_folder = '../../images/'#'/usr/tmp/'
     opt='/opt/'
     shotgun_home = opt + 'shotgun/'
     dc_cmd = 'docker-compose'
@@ -79,6 +79,17 @@ class pub(object):
 
     def getinput(self, prompt):
         return raw_input(self.BOLD + prompt + self.ENDC)
+
+    def gencmd(self,cmd):
+        print '\nExcuting %s' % (cmd)
+        result=os.system(cmd)
+        print 'Finished.'
+        return result
+
+    def replacefilecontent(self, oldstr, newstr, yml):
+        cmd="sed -i \"s/%s/%s/g\" %s" % (oldstr, newstr, yml)
+        self.gencmd(cmd)
+        print cmd, ' excuted.'
 
     def printwarn(self, m):
         print self.WARNING + m + self.ENDC

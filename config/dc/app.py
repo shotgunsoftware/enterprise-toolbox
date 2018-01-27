@@ -90,6 +90,7 @@ class App(base.Base):
                 self.setupmedia(yml)
                 self.setupdb()
                 self.setupemailer(yml)
+                self.setupproxy(yml)
         else:
             self.p.printwarn('Ignored configure %s.' % (sitetype))
 
@@ -113,15 +114,25 @@ class App(base.Base):
 
     def setupemailer(self, yml):
         '''Setup email'''
-        prompt ='Do you want to configure %s site? (Y/n): ' % ('emailnotification')
+        prompt ='Do you want to configure %s? (y/N): ' % ('emailnotification')
         ans = self.p.getinput(prompt)
-        if ans == 'Y' or ans == 'y' or ans == '':
+        if ans == 'Y' or ans == 'y':
             EMLN1 = self.getlinenum('emailnotifier:', yml)
             EMLN2 = int(EMLN1)+13
             cmd="sed -i \"%s,%s s/^..#/ /g\" %s" % (str(EMLN1), str(EMLN2), yml)
             self.gencmd(cmd)
             
-    def setupdb(self, ):
+    def setupproxy(self, yml):
+        '''Setup proxy'''
+        prompt ='Do you want to configure %s? (y/N): ' % ('proxy')
+        ans = self.p.getinput(prompt)
+        if ans == 'Y' or ans == 'y':
+            LN1 = self.getlinenum('proxy:', yml)
+            LN2 = int(LN1)+11
+            cmd="sed -i \"%s,%s s/^..#/ /g\" %s" % (str(LN1), str(LN2), yml)
+            self.gencmd(cmd)
+            
+    def setupdb(self):
         '''Setup standalone database'''
         yml = self.production_yml_home + self.gdata.yml
         prompt ='Do you want to configure %s site? (Y/n): ' % ('standalone database')
