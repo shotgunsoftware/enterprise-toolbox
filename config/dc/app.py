@@ -17,7 +17,9 @@ class App(base.Base):
     production_yml_home = ""
     staging_yml_home = ""
     
-    STAT="Up      0.0.0.0:80->80/tcp"
+    STAT="sg_r ...   Up      0.0.0.0:80->80/tcp"
+    STAT1="Up      0.0.0.0:8888->80/tcp"
+    STAT2="Up      0.0.0.0:9999->80/tcp"
 
     def __init__(self, gd, pub):
         self.gdata = gd
@@ -158,22 +160,51 @@ class App(base.Base):
         prompt ='Do you want to configure %s? (y/N): ' % ('emailnotifier')
         ans = self.p.getinput(prompt)
         if ans == 'Y' or ans == 'y':
-            EMLN1 = self.getlinenum('emailnotifier:', yml)
-            EMLN2 = int(EMLN1)+13
-            cmd="sed -i \"%s,%s s/^..#/ /g\" %s" % (str(EMLN1), str(EMLN2), yml)
-            self.gencmd(cmd)
+            LN1 = self.getlinenum('# emailnotifier:', yml)
+            if not LN1 == "":    
+                LN2 = int(LN1)+13
+                cmd="sed -i \"%s,%s s/^..#/ /g\" %s" % (str(LN1), str(LN2), yml)
+                self.gencmd(cmd)
+            else:
+                self.p.printhead("Emailnotifier was enabled.")
             
     def setupproxy(self):
         '''Setup proxy'''
-        yml = self.production_yml_home + self.gdata.yml
         prompt ='Do you want to configure %s? (y/N): ' % ('proxy')
         ans = self.p.getinput(prompt)
         if ans == 'Y' or ans == 'y':
-            LN1 = self.getlinenum('proxy:', yml)
-            LN2 = int(LN1)+11
-            cmd="sed -i \"%s,%s s/^..#/ /g\" %s" % (str(LN1), str(LN2), yml)
-            self.gencmd(cmd)
-            
+            pro_yml = self.production_yml_home + self.gdata.yml
+            sta_yml = self.staging_yml_home + self.gdata.yml
+            if self.p.validate_file(pro_yml) and self.p.validate_file(sta_yml):
+                '''Enable haproxy in production yml'''
+                LN1 = self.getlinenum('# proxy:', pro_yml)
+                if not LN1 == "":
+                    LN2 = int(LN1)+11
+                    cmd="sed -i \"%s,%s s/^..#/ /g\" %s" % (str(LN1), str(LN2), pro_yml)
+                    self.gencmd(cmd)
+                else:
+                    self.p.printhead("Haproxy was enabled.")
+                '''Copy haproxy.conf to .proxy folder'''
+                hostip = self.gethostip()
+                cmd="cp %s %s" % ("dc/haproxy.cfg", self.production_yml_home+"proxy/")
+                self.gencmd(cmd)
+                self.ymlreplace('192.168.0.90', hostip, self.production_yml_home+"proxy/haproxy.cfg")
+
+                '''Change app http 80 to 8888'''
+                self.p.replacethefirstmatch("80:80","8888:80",pro_yml)
+
+                '''Change staging http 80 to 9999'''
+                self.p.replacethefirstmatch("80:80","9999:80",sta_yml)
+
+                '''Change transcoder 8008 to 9009'''
+                TLN = self.getlinenum("8008:80", sta_yml)
+                if not TLN == "":
+                    self.ymlreplace("8008:80", "9009:80", sta_yml)
+                else:
+                    self.p.printhead("Transcoder port was changed.")
+            else:
+                self.p.printfail("Production server or Staging server was not configured.")
+
     def setupdb(self):
         '''Setup standalone database'''
         yml = self.production_yml_home + self.gdata.yml
@@ -310,7 +341,7 @@ class App(base.Base):
                 if self.p.validate_file(self.production_yml_home + self.gdata.yml):
                     IMGSTAT="%s                 %s" % (self.img, self.getVersion())
                     if self.validate_loaded(self.__class__.__name__, IMGSTAT):
-                        if not self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT):
+                        if not self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT) and not self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT1):
                             self.dcup(self.production_yml_home, 'production')
                         else:
                             self.p.printfail('shotgun production server is running')
@@ -325,7 +356,7 @@ class App(base.Base):
                 if self.p.validate_file(self.staging_yml_home + self.gdata.yml):
                     IMGSTAT="%s                 %s" % (self.img, self.getVersion())
                     if self.validate_loaded(self.__class__.__name__, IMGSTAT):
-                        if not self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT):
+                        if not self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT) and not self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT2):
                             self.dcup(self.staging_yml_home, 'staging')
                         else:
                             self.p.printfail('shotgun staging server is running')
@@ -362,10 +393,20 @@ class App(base.Base):
                     self.p.printfail('Staging server isn\'t configured. Can\'t stop')
             else:
                 self.p.printfail('Staging server isn\'t configured. Can\'t stop')
-    def setpassword(self):
-        if self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT):
-            self.p.printhead('Change shotgun_admin password to \'%s\'' % (self.gdata.SHOTGUN_ADMIN_PW))
-            cmd = 'cd %s && docker-compose run --rm app rake admin:reset_shotgun_admin_password[%s]' % (self.production_yml_home, self.gdata.SHOTGUN_ADMIN_PW)
-            self.gencmd(cmd)
-        else:
-            self.p.printfail('shotgun production server is not running, can\'t reset password')
+    
+    def setpassword(self, sitetype):
+        if sitetype == "production":
+            if self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT) or self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT1):
+                self.p.printhead('Change shotgun_admin password to \'%s\'' % (self.gdata.SHOTGUN_ADMIN_PW))
+                cmd = 'cd %s && docker-compose run --rm app rake admin:reset_shotgun_admin_password[%s]' % (self.production_yml_home, self.gdata.SHOTGUN_ADMIN_PW)
+                self.gencmd(cmd)
+            else:
+                self.p.printfail('shotgun production server is not running, can\'t reset password')
+        
+        if sitetype == "staging":
+            if self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT) or self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT2):
+                self.p.printhead('Change shotgun_admin password to \'%s\'' % (self.gdata.SHOTGUN_ADMIN_PW))
+                cmd = 'cd %s && docker-compose run --rm app rake admin:reset_shotgun_admin_password[%s]' % (self.production_yml_home, self.gdata.SHOTGUN_ADMIN_PW)
+                self.gencmd(cmd)
+            else:
+                self.p.printfail('shotgun staging server is not running, can\'t reset password')

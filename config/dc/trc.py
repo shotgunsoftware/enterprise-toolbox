@@ -157,7 +157,7 @@ class TranscoderService(base.Base):
                 cmd = 'sed -i "%s,%s s/^.#//g" %s' % (str(SL1), str(SL2), yml)
                 self.gencmd(cmd)
             else:
-                self.p.printhead('docker-compose.yml was edited.')
+                self.p.printhead('Transcoder service was enabled.')
         else:
             self.p.printwarn('Ignored transcoder service configuration.')
 

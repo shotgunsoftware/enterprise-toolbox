@@ -94,6 +94,11 @@ class pub(object):
         self.gencmd(cmd)
         print cmd, ' excuted.'
 
+    def replacethefirstmatch(self, oldstr, newstr, yml):
+        cmd="sed -i \"0,/%s/s/%s/%s/g\" %s" % (oldstr,oldstr, newstr, yml)
+        self.gencmd(cmd)
+        print cmd, ' excuted.'
+        
     def printwarn(self, m):
         print self.WARNING + m + self.ENDC
 

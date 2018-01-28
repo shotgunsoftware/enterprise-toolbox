@@ -25,7 +25,7 @@ def ToolsMenu():
         options.sort()
         for entry in options:
             if entry == "0-":
-                p.printend(menu[entry])
+                print menu[entry]
             else: 
                 p.printend(entry + ': ' + menu[entry])
 
@@ -47,7 +47,8 @@ def RakeCommandsMenu():
     menu = {}
     menu['0']="Back to main menu"
     menu['0-']="--------------------------------"
-    menu['1']="Reset shotgun server password to %s" % (gd.SHOTGUN_ADMIN_PW)
+    menu['1']="Reset production server password to %s" % (gd.SHOTGUN_ADMIN_PW)
+    menu['2']="Reset staging server password to %s" % (gd.SHOTGUN_ADMIN_PW)
 
     while True: 
         os.system('clear')
@@ -55,7 +56,7 @@ def RakeCommandsMenu():
         options.sort()
         for entry in options: 
             if entry == "0-":
-                p.printend(menu[entry])
+                print menu[entry]
             else:
                 p.printend(entry + ': ' + menu[entry])
 
@@ -63,7 +64,12 @@ def RakeCommandsMenu():
         if selection =='1': 
             '''Reset shotgun server password'''
             os.system('clear')
-            a.setpassword()
+            a.setpassword('production')
+            selection=raw_input("\nPress any key ...") 
+        if selection =='2': 
+            '''Reset shotgun server password'''
+            os.system('clear')
+            a.setpassword('staging')
             selection=raw_input("\nPress any key ...") 
         elif selection == '0': 
             os.system('clear')
@@ -76,7 +82,7 @@ def RakeCommandsMenu():
 def DockerCommandsMenu():
     menu = {}
     menu['0']="Back to main menu"
-    menu['0-']="--------------------------------"
+    menu['0-']="--------- Docker Commands -----------"
     menu['1']="Show All Containers"
     menu['2']="Show All Images"
     menu['3']="Docker System Prune"
@@ -87,7 +93,7 @@ def DockerCommandsMenu():
         options.sort()
         for entry in options: 
             if entry == "0-":
-                p.printend(menu[entry])
+                print menu[entry]
             else:
                 p.printend(entry + ': ' + menu[entry])
 
@@ -126,7 +132,7 @@ def LoadImagesMenu():
         options.sort()
         for entry in options: 
             if entry == "0-":
-                p.printend(menu[entry])
+                print menu[entry]
             else:
                 p.printend(entry + ': ' + menu[entry])
 
@@ -177,7 +183,7 @@ def StartStopServicesMenu():
         options.sort()
         for entry in options: 
             if entry == "0-" or entry == "3-":
-                p.printend(menu[entry])
+                print menu[entry]
             else:
                 p.printend(entry + ': ' + menu[entry])
 
@@ -223,25 +229,28 @@ def StartStopServicesMenu():
 def ConfigYMLMenu():
     menu = {}
     menu['0']="Back to main menu"
-    menu['0-'] ="----------------- Production Server -----------------"
+    menu['0-'] ="--------- Standalone Production Server --------------"
     menu['1']="Reset %s Production Site Config YML" % (sg)
     menu['2']="Setup %s Production App" % (sg)
     menu['3']="Setup Standalone Postgresql Production Server"
-    menu['4']="Enable Email-Notifier on %s Production" % (sg)
-    menu['5']="Enable Transcoder Services on %s Production" % (sg)
-    menu['5-'] ="----------------- Staging Server --------------------"
-    menu['6']="Reset %s Staging Site Config YML" % (sg)
-    menu['7']="Setup %s Staging App" % (sg)
-    menu['8']="Enable Email-Notifier on %s Staging" % (sg)
-    menu['9']="Enable Transcoder Services on %s Staging" % (sg)
+    menu['3-'] ="--------- Standalone Staging Server -----------------"
+    menu['4']="Reset %s Staging Site Config YML" % (sg)
+    menu['5']="Setup %s Staging App" % (sg)
+    menu['5-0']="----- Production & Staging Mixed Server -------------"
+    menu['5-1']="This will configure haproxy when Production and Staging"
+    menu['5-2']="running on same machine."
+    menu['5-3']="Please make sure you have setup standalone Production and"
+    menu['5-4']="Staging server on the same machine. And all services have"
+    menu['5-5']="been stopped."
+    menu['6']="Edit Production & Staging YML and Enable Haproxy"
 
     while True: 
         os.system('clear')
         options=menu.keys()
         options.sort()
         for entry in options: 
-            if entry == "5-" or entry == "0-":
-                p.printend(menu[entry])
+            if entry == "3-" or entry == "0-" or entry == "5-0" or entry == "5-1" or entry == "5-2" or entry == "5-3" or entry == "5-4" or entry == "5-5":
+                print menu[entry]
             else:
                 p.printend(entry + ': ' + menu[entry])
 
@@ -255,6 +264,8 @@ def ConfigYMLMenu():
             '''Setup %s Production App'''
             os.system('clear')
             a.setupproduction()
+            a.setupemailer('production')
+            t.editproductionyml()
             selection=raw_input("\nPress any key ...") 
         elif selection =='3': 
             '''Setup database'''
@@ -262,34 +273,21 @@ def ConfigYMLMenu():
             a.setupdb()
             selection=raw_input("\nPress any key ...") 
         elif selection =='4': 
-            '''Enable Email-Notifier'''
-            os.system('clear')
-            a.setupemailer('production')
-            selection=raw_input("\nPress any key ...") 
-        elif selection =='5': 
-            '''Enable Transcoder Services'''
-            os.system('clear')
-            t.editproductionyml()
-            selection=raw_input("\nPress any key ...") 
-        elif selection =='6': 
             '''Reset Site Config YML'''
             os.system('clear')
             a.startover('staging')
             selection=raw_input("\nPress any key ...") 
-        elif selection =='7': 
+        elif selection =='5': 
             '''Setup Staging App'''
             os.system('clear')
             a.setupstaging()
-            selection=raw_input("\nPress any key ...") 
-        elif selection =='8': 
-            '''Enable Email-Notifier'''
-            os.system('clear')
             a.setupemailer('staging')
-            selection=raw_input("\nPress any key ...") 
-        elif selection =='9': 
-            '''Enable Transcoder Services'''
-            os.system('clear')
             t.editstagingyml()
+            selection=raw_input("\nPress any key ...") 
+        elif selection =='6': 
+            '''Haproxy'''
+            os.system('clear')
+            a.setupproxy()
             selection=raw_input("\nPress any key ...") 
         elif selection == '0': 
             os.system('clear')
@@ -318,7 +316,7 @@ if __name__=="__main__":
         options.sort()
         for entry in options: 
             if entry == "4-" or entry == "0-" or entry == "1-":
-                p.printend(menu[entry])
+                print menu[entry]
             else:
                 p.printend(entry + ': ' + menu[entry])
                 
