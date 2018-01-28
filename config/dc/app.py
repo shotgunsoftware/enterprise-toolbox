@@ -54,15 +54,37 @@ class App(base.Base):
     def getappfile(self):
         return self.gdata.getTempfolder() + self.gzfile
 
-    def getsiteurl(self, site):
+    def getsiteurl(self, sitetype, yml):
         '''get site url, db server address'''
-        prompt ='Please input your %s site url? (%s): ' % (site,self.gdata.SITE_URL)
+        getstatus =  False
+        SITE_URL = self.getsinglevalue("SHOTGUN_SITE_URL:", yml)
+        self.p.printhead('Find site url %s in %s' % (SITE_URL, yml))
+        if sitetype == "production":
+            self.gdata.SITE_Production_URL=SITE_URL
+        else:
+            self.gdata.SITE_Staging_URL=SITE_URL
+
+        prompt ='Please input your %s site url? (%s): ' % (sitetype, SITE_URL)
         ans = self.p.getinput(prompt)
         if not ans == "":
-            self.gdata.SITE_URL = ans
+            if sitetype == "production":
+                if not self.gdata.SITE_Production_URL == ans:
+                    self.gdata.SITE_Production_URL = ans
+                    getstatus = True
+            else:
+                if not self.gdata.SITE_Staging_URL == ans:
+                    self.gdata.SITE_Staging_URL = ans
+                    getstatus = True
+        if not getstatus:
+            self.p.printhead('The input is %s. Nothing to change.' % (ans))
+        return getstatus
 
-    def startover(self, sitetype, yml):
+    def startover(self, sitetype):
         '''Start over'''
+        if sitetype == "production":
+            yml = self.production_yml_home + self.gdata.yml
+        else:
+            yml = self.staging_yml_home + self.gdata.yml
         prompt ='Do you want to start from a fresh %s on %s site? (Y/n): ' % (self.gdata.yml, sitetype)
         ans = self.p.getinput(prompt)
         if ans == 'Y' or ans == 'y' or ans == '':
@@ -75,7 +97,6 @@ class App(base.Base):
         prompt ='Do you want to configure %s site? (Y/n): ' % (sitetype)
         ans = self.p.getinput(prompt)
         if ans == 'Y' or ans == 'y' or ans == '':
-            self.getsiteurl(sitetype)
             if not self.p.validate_folder(ymlhome):
                 cmd='cp -r %s %s' % (self.homefull+'example', ymlhome)
                 self.gencmd(cmd)
@@ -83,25 +104,32 @@ class App(base.Base):
                 msg ='%s folder exist.' % (sitetype)
                 self.p.printfail(msg)
             
-            self.startover(sitetype,yml)
-            
+                
             '''Edit docker-compose yml'''
             if not self.p.validate_file(yml):
                 self.p.printfail('%s doesn\'t exist. Please make sure app package is untar and loaded.' % (yml))
                 self.p.exit(0)
             else:
-                self.p.printhead("Change Shotgun Site URL to %s." % (self.gdata.SITE_URL))
-                self.ymlreplace(self.gdata.URL_IN_YML, self.gdata.SITE_URL,yml)
+                getstatus = self.getsiteurl(sitetype, yml)
+                if getstatus:
+                    if sitetype=="production":
+                        SITE_URL = self.gdata.SITE_Production_URL
+                    else:
+                        SITE_URL = self.gdata.SITE_Staging_URL
 
-            if sitetype == "production":
-                self.setupmedia(yml)
-                self.setupdb()
-                self.setupemailer(yml)
-                self.setupproxy(yml)
+                    self.p.printhead("Change Shotgun Site URL to %s." % (SITE_URL))
+                    
+                    self.ymlreplace(self.gdata.URL_IN_YML, SITE_URL,yml)
+
+                    if sitetype == "production":
+                        self.setupmedia()
+                        #self.setupdb()
+                        #self.setupemailer()
+                        #self.setupproxy()
         else:
             self.p.printwarn('Ignored configure %s.' % (sitetype))
 
-    def setupmedia(self, yml):
+    def setupmedia(self):
         '''Setup media'''
         prompt ='Do you want to configure %s site? (Y/n): ' % ('media folder')
         ans = self.p.getinput(prompt)
@@ -110,6 +138,7 @@ class App(base.Base):
             ans = self.p.getinput(prompt)
             if not ans == '' and not ans == './media':
                 '''Edit docker-compose yml'''
+                yml = self.production_yml_home + self.gdata.yml
                 if not self.p.validate_file(yml):
                     self.p.printfail('%s doesn\'t exist' % (yml))
                     self.p.exit(0)
@@ -119,9 +148,14 @@ class App(base.Base):
                     NVOL="%s:\/media" % (ans.replace('/','\/'))
                     self.ymlreplace(OVOL, NVOL,yml)
 
-    def setupemailer(self, yml):
+    def setupemailer(self, sitetype):
         '''Setup email'''
-        prompt ='Do you want to configure %s? (y/N): ' % ('emailnotification')
+        if sitetype == "production":
+            yml = self.production_yml_home + self.gdata.yml
+        else:
+            yml = self.staging_yml_home + self.gdata.yml
+
+        prompt ='Do you want to configure %s? (y/N): ' % ('emailnotifier')
         ans = self.p.getinput(prompt)
         if ans == 'Y' or ans == 'y':
             EMLN1 = self.getlinenum('emailnotifier:', yml)
@@ -129,8 +163,9 @@ class App(base.Base):
             cmd="sed -i \"%s,%s s/^..#/ /g\" %s" % (str(EMLN1), str(EMLN2), yml)
             self.gencmd(cmd)
             
-    def setupproxy(self, yml):
+    def setupproxy(self):
         '''Setup proxy'''
+        yml = self.production_yml_home + self.gdata.yml
         prompt ='Do you want to configure %s? (y/N): ' % ('proxy')
         ans = self.p.getinput(prompt)
         if ans == 'Y' or ans == 'y':
@@ -231,27 +266,30 @@ class App(base.Base):
                 self.ymlreplace('- db','#- db', yml)
 
     def loadappimage(self):
-        self.setVersion()
-        if self.p.validate_file(self.getappfile()):
-            self.p.printsuc('%s file %s existed.' % (self.__class__.__name__, self.getappfile()))   
+        prompt='Do you want to load shotgun app image? (Y/n):'
+        ans=self.p.getinput(prompt)
+        if ans=='Y' or ans=='y' or ans =='':
+            self.setVersion()
+            if self.p.validate_file(self.getappfile()):
+                self.p.printsuc('%s file %s existed.' % (self.__class__.__name__, self.getappfile()))   
 
-        '''Untar app tar.gz package'''
-        untared = True
-        if not self.p.validate_folder(self.homefull):
-            untared = False    
-        else:
-            if not self.p.validate_file(self.homefull + self.tarfile):
-                untared = False
+            '''Untar app tar.gz package'''
+            untared = True
+            if not self.p.validate_folder(self.homefull):
+                untared = False    
+            else:
+                if not self.p.validate_file(self.homefull + self.tarfile):
+                    untared = False
 
-        if not untared:   
-            self.untar(self.getappfile(), self.gdata.opt)
-            self.chown('shotgun', self.homefull)
-        else:
-            self.p.printwarn('%s file existed. Ignored!' % (self.homefull + self.tarfile))   
-        
-        IMGSTAT="%s                 %s" % (self.img, self.getVersion())
-        if not self.validate_loaded(self.__class__.__name__, IMGSTAT):
-            self.dcload(self.homefull, self.tarfile)
+            if not untared:   
+                self.untar(self.getappfile(), self.gdata.opt)
+                self.chown('shotgun', self.homefull)
+            else:
+                self.p.printwarn('%s file existed. Ignored!' % (self.homefull + self.tarfile))   
+            
+            IMGSTAT="%s                 %s" % (self.img, self.getVersion())
+            if not self.validate_loaded(self.__class__.__name__, IMGSTAT):
+                self.dcload(self.homefull, self.tarfile)
 
     def setupproduction(self):
         '''Setup Production'''
@@ -265,23 +303,65 @@ class App(base.Base):
         sitetype ='staging'
         self.setupsite(sitetype, self.staging_yml_home, yml)
     
-    def startserver(self):
+    def startserver(self, servertype):
         '''start production server'''
-        if self.p.validate_folder(self.production_yml_home): 
-            if self.p.validate_file(self.production_yml_home + self.gdata.yml):
-                IMGSTAT="%s                 %s" % (self.img, self.getVersion())
-                if self.validate_loaded(self.__class__.__name__, IMGSTAT):
-                    if not self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT):
-                        self.dcup(self.production_yml_home, 'production')
+        if servertype == "production":
+            if self.p.validate_folder(self.production_yml_home): 
+                if self.p.validate_file(self.production_yml_home + self.gdata.yml):
+                    IMGSTAT="%s                 %s" % (self.img, self.getVersion())
+                    if self.validate_loaded(self.__class__.__name__, IMGSTAT):
+                        if not self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT):
+                            self.dcup(self.production_yml_home, 'production')
+                        else:
+                            self.p.printfail('shotgun production server is running')
                     else:
-                        self.p.printfail('shotgun production server is running')
+                        self.p.printfail('shotgun image isn\'t loaded. Can\'t start')
                 else:
-                    self.p.printfail('shotgun image isn\'t loaded. Can\'t start')
+                    self.p.printfail('Production server isn\'t configured. Can\'t start')
             else:
                 self.p.printfail('Production server isn\'t configured. Can\'t start')
-        else:
-            self.p.printfail('Production server isn\'t configured. Can\'t start')
+        if servertype == "staging":
+            if self.p.validate_folder(self.staging_yml_home): 
+                if self.p.validate_file(self.staging_yml_home + self.gdata.yml):
+                    IMGSTAT="%s                 %s" % (self.img, self.getVersion())
+                    if self.validate_loaded(self.__class__.__name__, IMGSTAT):
+                        if not self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT):
+                            self.dcup(self.staging_yml_home, 'staging')
+                        else:
+                            self.p.printfail('shotgun staging server is running')
+                    else:
+                        self.p.printfail('shotgun image isn\'t loaded. Can\'t start')
+                else:
+                    self.p.printfail('Staging server isn\'t configured. Can\'t start')
+            else:
+                self.p.printfail('Staging server isn\'t configured. Can\'t start')
 
+    def stopserver(self, servertype):
+        '''start production server'''
+        if servertype == "production":
+            if self.p.validate_folder(self.production_yml_home): 
+                if self.p.validate_file(self.production_yml_home + self.gdata.yml):
+                    IMGSTAT="%s                 %s" % (self.img, self.getVersion())
+                    if self.validate_loaded(self.__class__.__name__, IMGSTAT):
+                        self.dcstop(self.production_yml_home, 'production')
+                    else:
+                        self.p.printfail('shotgun image isn\'t loaded. Can\'t stop')
+                else:
+                    self.p.printfail('Production server isn\'t configured. Can\'t stop')
+            else:
+                self.p.printfail('Production server isn\'t configured. Can\'t stop')
+        if servertype == "staging":
+            if self.p.validate_folder(self.staging_yml_home): 
+                if self.p.validate_file(self.staging_yml_home + self.gdata.yml):
+                    IMGSTAT="%s                 %s" % (self.img, self.getVersion())
+                    if self.validate_loaded(self.__class__.__name__, IMGSTAT):
+                        self.dcstop(self.staging_yml_home, 'staging')
+                    else:
+                        self.p.printfail('shotgun image isn\'t loaded. Can\'t stop')
+                else:
+                    self.p.printfail('Staging server isn\'t configured. Can\'t stop')
+            else:
+                self.p.printfail('Staging server isn\'t configured. Can\'t stop')
     def setpassword(self):
         if self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT):
             self.p.printhead('Change shotgun_admin password to \'%s\'' % (self.gdata.SHOTGUN_ADMIN_PW))

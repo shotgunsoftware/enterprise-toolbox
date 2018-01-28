@@ -14,7 +14,8 @@ class global_data(object):
     yml = 'docker-compose.yml'
     media_volume="./media"
 
-    SITE_URL="sg.autodesk.com"
+    SITE_Production_URL="sg.autodesk.com"
+    SITE_Staging_URL="sg-staging.autodesk.com"
     URL_IN_YML="shotgun.mystudio.test"
     VOLUMES="" #Have to use excape '\' to represent /. Exapmle '\/'
     ENABLEEMAILER=1 #1=uncomment emailnotifier 0=don't change
@@ -107,7 +108,19 @@ class pub(object):
 
     def printend(self, m):
         print self.BOLD + m + self.ENDC
-        
+    
+    def dockerps(self):
+        cmd="docker ps -a"
+        self.gencmd(cmd)
+
+    def dockerimages(self):
+        cmd="docker images"
+        self.gencmd(cmd)
+
+    def dockersystemprune(self):
+        cmd="docker system prune"
+        self.gencmd(cmd)
+
     def exit(self, stat):
         if stat == 1:
             self.printsuc('All done!')
@@ -200,6 +213,13 @@ class Base(object):
         print cmd
         self.gencmd(cmd)
 
+    def dcstop(self, pkgpath, pkg):
+        '''stop server'''
+        print 'Starting %s server' % pkg
+        cmd = 'cd %s && docker-compose stop' % (pkgpath)
+        print cmd
+        self.gencmd(cmd)
+
     def ymlreplace(self, oldstr, newstr, yml):
         cmd="sed -i \"s/%s/%s/g\" %s" % (oldstr, newstr, yml)
         self.gencmd(cmd)
@@ -214,6 +234,22 @@ class Base(object):
         cmd="sed -n \"/%s/=\" %s" % (linestr, yml);
         linunum = self.popencmd(cmd)
         return linunum
+
+    def getfirstlinenum(self, linestr, yml):
+        cmd="sed -n \"/%s/=\" %s" % (linestr, yml);
+        linunum = self.popencmd(cmd)
+        #if len(linunum) > 1:
+        #    return linunum[0]
+        #else:
+        return linunum
+    
+    def getsinglevalue(self,linestr,yml):
+        cmd="sed -n 's/^.*%s//p' %s" % (linestr, yml);
+        linunum = self.popencmd(cmd)
+        #if len(linunum) > 1:
+        #    return linunum[0]
+        #else:
+        return linunum.strip()
 
     def getipv4(self):
         '''will return [('127.0.0.1', 8), ('10.0.2.15', 24), ('172.19.0.1', 16), ('172.17.0.1', 16), ('172.18.0.1', 16)]'''
@@ -273,7 +309,6 @@ class Base(object):
                 return version
         
         return result
-
-            
+          
     def setup(self):
         pass

@@ -185,7 +185,10 @@ class TranscoderService(base.Base):
             self.p.printwarn('Ignored transcoder service configuration.')
 
     def loadimages(self):
-        self.setupServer()
-        self.setupWorker()
+        prompt='Do you want to load shotgun transcoder server and worker images? (Y/n):'
+        ans=self.p.getinput(prompt)
+        if ans=='Y' or ans=='y' or ans =='':
+            self.setupServer()
+            self.setupWorker()
 
 

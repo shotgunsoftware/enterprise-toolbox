@@ -52,7 +52,7 @@ class SEC(base.Base):
     def getsecfile(self):
         return self.gdata.getTempfolder() + self.gzfile
 
-    def setup(self):
+    def loadimage(self):
         self.setVersion()
         if self.p.validate_file(self.getsecfile()):
             self.p.printsuc('%s file %s existed.' % (self.__class__.__name__, self.getsecfile()))   
@@ -78,7 +78,8 @@ class SEC(base.Base):
 
         cmd = 'systemctl enable secstart'
         self.gencmd(cmd)
-        
+
+    def startup(self):
         '''Start sec'''
         prompt ='Do you want to start (%s)? (Y/n): ' % (self.__class__.__name__)
         ans = self.p.getinput(prompt)
@@ -91,6 +92,15 @@ class SEC(base.Base):
                 self.gencmd(cmd)
                 self.p.printsuc("Access Shotgun http://127.0.0.1:8080")
             
-        
+    def stopserver(self):
+        '''start sec server'''
+        if self.p.validate_folder(self.homefull): 
+            IMGSTAT="%s          %s" % (self.img, self.getVersion())
+            if self.validate_loaded(self.__class__.__name__, IMGSTAT):
+                self.dcstop(self.homefull, 'sec')
+            else:
+                self.p.printfail('shotgun sec image isn\'t loaded. Can\'t stop')
+        else:
+            self.p.printfail('SEC server isn\'t configured. Can\'t stop')
             
         
