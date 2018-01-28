@@ -2,12 +2,15 @@
 
 ### sudo python setup.py
  
-- 0: Exit
-- 1: Create shotgun user & Configure system security.
-- 2: Extract & load [shotgun app image] [transcoder images].
-- 3: Setup shotgun enterprise console.
-- 4: Configure production yml [app] [db] [dbops] [transcoder services].
-- 5: Start shotgun enterprise production server.
-- 6: Configure staging yml.
-- 7: Reset shotgun server password to password
-- 8: Setup basic monitor
+#### 0: Exit
+#### -------------- System  ------------------
+#### 1: Create shotgun user & Configure system security.
+#### -------------- Configuration  -----------
+#### 2: Extract & Load Shotgun Images
+#### 3: Configure Shotgun Configuration YML
+#### 4: Start/Stop Shotgun Services
+#### -------------- Helper -------------------
+#### 5: Shotgun Rake Commands
+#### 6: Tools
+#### 7: Docker Commands
+#### Please Select:
