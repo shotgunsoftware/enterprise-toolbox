@@ -32,13 +32,15 @@ class App(base.Base):
 
     def setVersion(self):
         version = self.getappversion(self.gdata.temp_folder, "shotgun-docker-se-", versions.app_supported[0])
+    
         if version == "":
             self.p.printfail('Can\'t find shotgun application software in the folder. Please make sure you have copy the file in the folder')
             prompt ='%s Version (%s): ' % (self.__class__.__name__, versions.app_supported[0])
             ver = self.p.getinput(prompt)
-            ver = versions.app_supported[0]
+            if ver == "":
+               ver = versions.app_supported[0]
         else:
-            prompt ='%s Version: %s' % (self.__class__.__name__, version)
+            prompt ='%s Version (%s): ' % (self.__class__.__name__, version)
             ver = self.p.getinput(prompt)
             if ver == "":
                 ver = version
@@ -46,6 +48,9 @@ class App(base.Base):
         if self.p.validate_version(ver, versions.app_supported):
             self.p.printsuc('%s Version %s is validated' % (self.__class__.__name__, ver))
             self.version = ver
+
+            self.gzfile = "shotgun-docker-se-%s.tar.gz" % (self.version)
+            self.tarfile = 'shotgun-app.%s.tar' % (self.version)
         else:
             self.p.printfail('Inputed %s version %s is not supported!' % (self.__class__.__name__, ver))
             self.p.exit(0)
@@ -188,7 +193,11 @@ class App(base.Base):
                 hostip = self.gethostip()
                 cmd="cp %s %s" % ("dc/haproxy.cfg", self.production_yml_home+"proxy/")
                 self.gencmd(cmd)
-                self.ymlreplace('192.168.0.90', hostip, self.production_yml_home+"proxy/haproxy.cfg")
+                self.ymlreplace('replace_host_ip', hostip, self.production_yml_home+"proxy/haproxy.cfg")
+                
+                self.ymlreplace('replace_production_dns', SITE_Production_URL, self.production_yml_home+"proxy/haproxy.cfg")
+                self.ymlreplace('replace_staging_dns', SITE_Staging_URL, self.production_yml_home+"proxy/haproxy.cfg")
+
 
                 '''Change app http 80 to 8888'''
                 self.p.replacethefirstmatch("80:80","8888:80",pro_yml)
@@ -248,16 +257,13 @@ class App(base.Base):
         '''Get database server ip'''
         prompt ='Please input your database host (ip address or hostname):'
         self.gdata.hostip = self.p.getinput(prompt)
-                    
-        if self.gdata.hostip == "" or self.gdata.hostip == "db":
-            self.p.printfail('database host is localhost. Ignored.')
-            self.p.exit(0)
+        while self.gdata.hostip == "": 
+            self.gdata.hostip = self.p.getinput(prompt)
 
-            prompt ='Please input your database password:'
+        prompt ='Please input your database password:'
+        self.gdata.POSTGRES_PASSWORD = self.p.getinput(prompt)
+        while self.gdata.POSTGRES_PASSWORD == "":
             self.gdata.POSTGRES_PASSWORD = self.p.getinput(prompt)
-            if self.gdata.POSTGRES_PASSWORD == "":
-                self.p.printfail('Password is invalid.')
-                self.p.exit(0)
         
     def modifydatabaseyml(self, yml):
         '''Edit docker-compose yml'''
@@ -406,7 +412,38 @@ class App(base.Base):
         if sitetype == "staging":
             if self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT) or self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT2):
                 self.p.printhead('Change shotgun_admin password to \'%s\'' % (self.gdata.SHOTGUN_ADMIN_PW))
-                cmd = 'cd %s && docker-compose run --rm app rake admin:reset_shotgun_admin_password[%s]' % (self.production_yml_home, self.gdata.SHOTGUN_ADMIN_PW)
+                cmd = 'cd %s && docker-compose run --rm app rake admin:reset_shotgun_admin_password[%s]' % (self.staging_yml_home, self.gdata.SHOTGUN_ADMIN_PW)
+                self.gencmd(cmd)
+            else:
+                self.p.printfail('shotgun staging server is not running, can\'t reset password')
+
+
+    def rakeupgrade(self, sitetype):
+        if sitetype == "production":
+            if self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT) or self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT1):
+                cmd = 'cd %s && docker-compose run --rm app rake admin:upgrade' % (self.production_yml_home)
+                self.gencmd(cmd)
+            else:
+                self.p.printfail('shotgun production server is not running, can\'t reset password')
+        
+        if sitetype == "staging":
+            if self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT) or self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT2):
+                cmd = 'cd %s && docker-compose run --rm app rake admin:upgrade' % (self.staging_yml_home)
+                self.gencmd(cmd)
+            else:
+                self.p.printfail('shotgun staging server is not running, can\'t reset password')
+
+    def rakescaletranscoder(self, sitetype):
+        if sitetype == "production":
+            if self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT) or self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT1):
+                cmd = 'cd %s && docker-compose scale transcoderworker=8'  % (self.production_yml_home)
+                self.gencmd(cmd)
+            else:
+                self.p.printfail('shotgun production server is not running, can\'t reset password')
+        
+        if sitetype == "staging":
+            if self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT) or self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT2):
+                cmd = 'cd %s && docker-compose scale transcoderworker=8' % (self.staging_yml_home)
                 self.gencmd(cmd)
             else:
                 self.p.printfail('shotgun staging server is not running, can\'t reset password')

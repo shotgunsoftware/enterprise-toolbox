@@ -47,8 +47,11 @@ def RakeCommandsMenu():
     menu = {}
     menu['0']="Back to main menu"
     menu['0-']="--------------------------------"
-    menu['1']="Reset production server password to %s" % (gd.SHOTGUN_ADMIN_PW)
-    menu['2']="Reset staging server password to %s" % (gd.SHOTGUN_ADMIN_PW)
+    menu['1']="Reset Production Server Password to %s" % (gd.SHOTGUN_ADMIN_PW)
+    menu['2']="Reset Staging Server Password to %s" % (gd.SHOTGUN_ADMIN_PW)
+    menu['3']="Upgrade Production Server"
+    menu['4']="Upgrade Staging Server"
+    menu['5']="Scale Production Transcoder Worker"
 
     while True: 
         os.system('clear')
@@ -71,6 +74,21 @@ def RakeCommandsMenu():
             os.system('clear')
             a.setpassword('staging')
             selection=raw_input("\nPress any key ...") 
+        if selection =='3': 
+            '''upgrade'''
+            os.system('clear')
+            a.rakeupgrade('production')
+            selection=raw_input("\nPress any key ...") 
+        if selection =='4': 
+            '''upgrade staging'''
+            os.system('clear')
+            a.rakeupgrade('staging')
+            selection=raw_input("\nPress any key ...") 
+        if selection =='5': 
+            '''scale transcoder'''
+            os.system('clear')
+            a.setpassword('production')
+            selection=raw_input("\nPress any key ...") 
         elif selection == '0': 
             os.system('clear')
             break
@@ -85,7 +103,6 @@ def DockerCommandsMenu():
     menu['0-']="--------- Docker Commands -----------"
     menu['1']="Show All Containers"
     menu['2']="Show All Images"
-    menu['3']="Docker System Prune"
 
     while True: 
         os.system('clear')
@@ -128,6 +145,7 @@ def LoadImagesMenu():
 
     while True: 
         os.system('clear')
+        print '-  Your images folder is ', gd.temp_folder
         options=menu.keys()
         options.sort()
         for entry in options: 
@@ -243,59 +261,49 @@ def ConfigYMLMenu():
     menu = {}
     menu['0']="Back to main menu"
     menu['0-'] ="--------- Standalone Production Server --------------"
-    menu['1']="Reset %s Production Site Config YML" % (sg)
-    menu['2']="Setup %s Production App" % (sg)
-    menu['3']="Setup Standalone Postgresql Production Server"
-    menu['3-'] ="--------- Standalone Staging Server -----------------"
-    menu['4']="Reset %s Staging Site Config YML" % (sg)
-    menu['5']="Setup %s Staging App" % (sg)
-    menu['5-0']="----- Production & Staging Mixed Server -------------"
-    menu['5-1']="This will configure haproxy when Production and Staging running on same machine."
-    menu['5-2']="Please make sure you have setup standalone Production and Staging server on the same machine."
-    menu['5-3']="And all services have been stopped."
-    menu['6']="Edit Production & Staging YML and Enable Haproxy"
+    menu['1']="Setup %s Production App" % (sg)
+    menu['2']="Setup Standalone Postgresql for Production Server"
+    menu['2-'] ="--------- Standalone Staging Server -----------------"
+    menu['3']="Setup %s Staging App" % (sg)
+    menu['3-0']="----- Production & Staging Mixed Server -------------"
+    menu['3-1']="This will configure haproxy when Production and Staging running on same machine."
+    menu['3-2']="Please make sure you have setup standalone Production and Staging server on the same machine."
+    menu['3-3']="And all services have been stopped."
+    menu['4']="Edit Production & Staging YML and Enable Haproxy"
 
     while True: 
         os.system('clear')
         options=menu.keys()
         options.sort()
         for entry in options: 
-            if entry == "3-" or entry == "0-" or entry == "5-0" or entry == "5-1" or entry == "5-2" or entry == "5-3":
+            if entry == "2-" or entry == "0-" or entry == "3-0" or entry == "3-1" or entry == "3-2" or entry == "3-3":
                 print menu[entry]
             else:
                 p.printend(entry + ': ' + menu[entry])
 
         selection=raw_input("Please Select: ") 
         if selection =='1': 
-            '''Reset Site Config YML'''
-            os.system('clear')
-            a.startover('production')
-            selection=raw_input("\nPress any key ...") 
-        elif selection =='2': 
             '''Setup %s Production App'''
             os.system('clear')
+            a.startover('production')
             a.setupproduction()
             a.setupemailer('production')
             t.editproductionyml()
             selection=raw_input("\nPress any key ...") 
-        elif selection =='3': 
+        elif selection =='2': 
             '''Setup database'''
             os.system('clear')
             a.setupdb()
             selection=raw_input("\nPress any key ...") 
-        elif selection =='4': 
-            '''Reset Site Config YML'''
-            os.system('clear')
-            a.startover('staging')
-            selection=raw_input("\nPress any key ...") 
-        elif selection =='5': 
+        elif selection =='3': 
             '''Setup Staging App'''
             os.system('clear')
+            a.startover('staging')
             a.setupstaging()
             a.setupemailer('staging')
             t.editstagingyml()
             selection=raw_input("\nPress any key ...") 
-        elif selection =='6': 
+        elif selection =='4': 
             '''Haproxy'''
             os.system('clear')
             a.setupproxy()

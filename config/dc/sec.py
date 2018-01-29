@@ -34,7 +34,7 @@ class SEC(base.Base):
             if ver == "":
                 ver = versions.sec_supported[0]
         else:
-            prompt ='%s Version: %s ' % (self.__class__.__name__, version)
+            prompt ='%s Version (%s): ' % (self.__class__.__name__, version)
             ver = self.p.getinput(prompt)
             if ver == "":
                 ver = version
@@ -42,6 +42,8 @@ class SEC(base.Base):
         if self.p.validate_version(ver, versions.sec_supported):
             self.p.printsuc('%s Version %s is validated' % (self.__class__.__name__, ver))
             self.version = ver
+            self.gzfile = "shotgun-docker-sec-%s.tar.gz" % (ver)
+            self.tarfile = 'shotgun-docker-sec-%s.tar' % (ver)
         else:
             self.p.printfail('Inputed %s version %s is not supported!' % (self.__class__.__name__, ver))
             self.p.exit(0)

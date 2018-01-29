@@ -53,14 +53,17 @@ class TranscoderService(base.Base):
             if ver == "":
                 ver = versions.worker_supported[0]
         else:
-            prompt ='%s Version: %s' % ('transcoder worker', version)
+            prompt ='%s Version (%s): ' % ('transcoder worker', version)
             ver = self.p.getinput(prompt)
             if ver == "":
                 ver = version
             
         if self.p.validate_version(ver, versions.worker_supported):
             self.p.printsuc('%s Version %s is validated' % ('transcoder worker', ver))
-            versions.worker_version = ver
+            self.worker_version = ver
+
+            self.worker_gzfile = "shotgun-docker-se-transcoder-worker-%s.tar.gz" % (ver)
+            self.worker_tarfile = "shotgun-transcoder-worker.%s.tar" % (ver)
         else:
             self.p.printfail('Inputed %s version %s is not supported!' % ('transcoder worker', ver))
             self.p.exit(0)
@@ -77,7 +80,7 @@ class TranscoderService(base.Base):
             if ver == "":
                 ver = versions.server_supported[0]
         else:
-            prompt ='%s Version: %s' % ('transcoder server', version)
+            prompt ='%s Version (%s): ' % ('transcoder server', version)
             ver = self.p.getinput(prompt)
             if ver == "":
                 ver = version
@@ -85,6 +88,9 @@ class TranscoderService(base.Base):
         if self.p.validate_version(ver, versions.server_supported):
             self.p.printsuc('%s Version %s is validated' % ('transcoder server', ver))
             self.server_version = ver
+
+            self.server_gzfile = "shotgun-docker-se-transcoder-server-%s.tar.gz" % (ver)
+            self.server_tarfile = "shotgun-transcoder-server.%s.tar" % (ver)
         else:
             self.p.printfail('Inputed %s version %s is not supported!' % ('transcoder server', ver))
             self.p.exit(0)

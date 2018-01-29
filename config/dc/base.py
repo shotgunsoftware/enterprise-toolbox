@@ -291,13 +291,23 @@ class Base(object):
         print 'Find host ip address'
         return localip
 
+    #def getpgsqldata(self):
+        
     def getfilesfromtempfolder(self, tempfolder,filterstring):
         files = glob.glob("%s/%s*.tar.gz" % (tempfolder, filterstring))
         sgfiles=[]
+        nlist = ['0','1','2','3','4','5','6','7','8','9']
         for fname in files[::-1]:
             f = os.path.basename(fname)
-            print f
-            sgfiles.append(f)
+            if filterstring == "shotgun-docker-se-":
+                cmd = "sed \"s/%s*//p\" <<< %s" % (filterstring, f)
+                ver = self.popencmd(cmd)
+                if ver[0] in nlist:
+                    print f
+                    sgfiles.append(f)
+            else:
+                print f
+                sgfiles.append(f)
         return sgfiles
         
     def getappversion(self, tempfolder, filterstring, version_list):
