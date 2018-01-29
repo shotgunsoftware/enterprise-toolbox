@@ -410,3 +410,17 @@ class App(base.Base):
                 self.gencmd(cmd)
             else:
                 self.p.printfail('shotgun staging server is not running, can\'t reset password')
+
+    def dockercomposestatus(self, sitetype):
+        yml = ""
+        if sitetype == "production":
+            yml = self.production_yml_home 
+        else:
+            yml = self.staging_yml_home
+
+        print yml
+        if self.p.validate_folder(yml):
+            cmd="cd %s && docker-compose ps" % (yml)
+            self.gencmd(cmd)
+        else:
+            self.p.printfail(('%s server isn\'t configured.') % (sitetype))

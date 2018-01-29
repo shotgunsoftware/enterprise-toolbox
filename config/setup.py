@@ -40,8 +40,8 @@ def ToolsMenu():
             break
         else: 
             os.system('clear')
-            print "\nUnknown Option Selected!\n" 
-            selection=raw_input("\nPress any key ...") 
+            #print "\nUnknown Option Selected!\n" 
+            #selection=raw_input("\nPress any key ...") 
 
 def RakeCommandsMenu():
     menu = {}
@@ -76,8 +76,8 @@ def RakeCommandsMenu():
             break
         else: 
             os.system('clear')
-            print "\nUnknown Option Selected!\n" 
-            selection=raw_input("\nPress any key ...") 
+            #print "\nUnknown Option Selected!\n" 
+            #selection=raw_input("\nPress any key ...") 
 
 def DockerCommandsMenu():
     menu = {}
@@ -162,8 +162,8 @@ def LoadImagesMenu():
             break
         else: 
             os.system('clear')
-            print "\nUnknown Option Selected!\n" 
-            selection=raw_input("\nPress any key ...") 
+            #print "\nUnknown Option Selected!\n" 
+            #selection=raw_input("\nPress any key ...") 
 
 def StartStopServicesMenu():
     menu = {}
@@ -176,13 +176,16 @@ def StartStopServicesMenu():
     menu['4']="Stop Shotgun Production Server"
     menu['5']="Stop Shotgun Staging Server"
     menu['6']="Stop Shotgun Enterprise Console"
+    menu['6-']="---------------- Status ---------------"
+    menu['7']="Status of Shotgun Production Server"
+    menu['8']="Status Shotgun Staging Server"
 
     while True: 
         os.system('clear')
         options=menu.keys()
         options.sort()
         for entry in options: 
-            if entry == "0-" or entry == "3-":
+            if entry == "0-" or entry == "3-" or entry == "3-" or entry == "6-":
                 print menu[entry]
             else:
                 p.printend(entry + ': ' + menu[entry])
@@ -218,13 +221,23 @@ def StartStopServicesMenu():
             os.system('clear')
             s.stopserver()
             selection=raw_input("\nPress any key ...") 
+        elif selection =='7': 
+            '''Status of Production'''
+            os.system('clear')
+            a.dockercomposestatus('production')     
+            selection=raw_input("\nPress any key ...") 
+        elif selection =='8': 
+            '''Status of Staging'''            
+            os.system('clear')
+            a.dockercomposestatus('staging')
+            selection=raw_input("\nPress any key ...") 
         elif selection == '0': 
             os.system('clear')
             break
         else: 
             os.system('clear')
-            print "\nUnknown Option Selected!\n" 
-            selection=raw_input("\nPress any key ...") 
+            #print "\nUnknown Option Selected!\n" 
+            #selection=raw_input("\nPress any key ...") 
 
 def ConfigYMLMenu():
     menu = {}
@@ -237,11 +250,9 @@ def ConfigYMLMenu():
     menu['4']="Reset %s Staging Site Config YML" % (sg)
     menu['5']="Setup %s Staging App" % (sg)
     menu['5-0']="----- Production & Staging Mixed Server -------------"
-    menu['5-1']="This will configure haproxy when Production and Staging"
-    menu['5-2']="running on same machine."
-    menu['5-3']="Please make sure you have setup standalone Production and"
-    menu['5-4']="Staging server on the same machine. And all services have"
-    menu['5-5']="been stopped."
+    menu['5-1']="This will configure haproxy when Production and Staging running on same machine."
+    menu['5-2']="Please make sure you have setup standalone Production and Staging server on the same machine."
+    menu['5-3']="And all services have been stopped."
     menu['6']="Edit Production & Staging YML and Enable Haproxy"
 
     while True: 
@@ -249,7 +260,7 @@ def ConfigYMLMenu():
         options=menu.keys()
         options.sort()
         for entry in options: 
-            if entry == "3-" or entry == "0-" or entry == "5-0" or entry == "5-1" or entry == "5-2" or entry == "5-3" or entry == "5-4" or entry == "5-5":
+            if entry == "3-" or entry == "0-" or entry == "5-0" or entry == "5-1" or entry == "5-2" or entry == "5-3":
                 print menu[entry]
             else:
                 p.printend(entry + ': ' + menu[entry])
@@ -294,8 +305,8 @@ def ConfigYMLMenu():
             break
         else: 
             os.system('clear')
-            print "\nUnknown Option Selected!\n" 
-            selection=raw_input("\nPress any key ...") 
+            #print "\nUnknown Option Selected!\n" 
+            #selection=raw_input("\nPress any key ...") 
 
 if __name__=="__main__":
     menu = {}
@@ -356,8 +367,8 @@ if __name__=="__main__":
             break
         else: 
             os.system('clear')
-            print "\nUnknown Option Selected!\n" 
-            selection=raw_input("\nPress any key ...") 
+            #print "\nUnknown Option Selected!\n" 
+            #selection=raw_input("\nPress any key ...") 
 
 
 
