@@ -91,6 +91,7 @@ function configure_postgresql () {
   
   # Kernel migration cost
   sudo sh -c 'echo "5000000" > /proc/sys/kernel/sched_migration_cost_ns'
+  sudo sh -c "echo 'echo \"5000000\" > /proc/sys/kernel/sched_migration_cost_ns' >> /etc/rc.d/rc.local"
 
   # Accept connections from local network
   sudo sh -c "cat <<'END_OF_HBA_CONF' >${PGDATA}/pg_hba.conf
