@@ -88,6 +88,10 @@ function configure_postgresql () {
   # postgres performance issues under heavy load and with postgres maintenance tasks (ex. autovacuum).
   sudo sh -c 'echo "never" > /sys/kernel/mm/transparent_hugepage/defrag'
   sudo sh -c "echo 'echo \"never\" > /sys/kernel/mm/transparent_hugepage/defrag' >> /etc/rc.d/rc.local"
+  
+  # Kernel migration cost
+  sudo sh -c 'echo "5000000" > /proc/sys/kernel/sched_migration_cost_ns'
+  sudo sh -c "echo 'echo \"5000000\" > /proc/sys/kernel/sched_migration_cost_ns' >> /etc/rc.d/rc.local"
 
   # Accept connections from local network
   sudo sh -c "cat <<'END_OF_HBA_CONF' >${PGDATA}/pg_hba.conf
