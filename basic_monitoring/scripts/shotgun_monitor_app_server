@@ -1,7 +1,7 @@
 #!/bin/sh
 APACHE_ROOT=$($(source /etc/profile && which httpd) -V | grep -oP '(?<=HTTPD_ROOT=\").*(?=\")')
 CONFIG_FILE=$APACHE_ROOT"/conf.d/passenger.conf"
-RUBY_PATH=$(grep -oP '(?<=PassengerDefaultRuby ).*(?=/ruby)' $CONFIG_FILE)
+RUBY_PATH=$(grep -oP '(?<=PassengerDefaultRuby ).*(?=/ruby)' $CONFIG_FILE|tail -n1)
 
 
 # Extract some monitoring data and output it.
