@@ -17,7 +17,7 @@ class SEC(base.Base):
     SECRUN="/etc/systemd/system/secstart.service"
     SRC="dc/secstart.service"
     SECSTAT="Up      0.0.0.0:8080->8080/tcp"
-    IMGSTAT="%s:%s" % (img,version)
+    #IMGSTAT="%s:%s" % (img,version)
 
     def __init__(self, gd, pub):
         self.gdata = gd
@@ -73,6 +73,10 @@ class SEC(base.Base):
         else:
             self.p.printwarn('%s file existed. Ignored!' % (self.homefull + self.tarfile))   
         
+        IMGSTAT="%s:%s" % (self.img, self.getVersion())
+        if not self.validate_loaded(self.__class__.__name__, IMGSTAT):
+            self.dcload(self.homefull, self.tarfile)
+
         '''Setup sec up when system startup'''
         if not self.p.validate_file(self.SECRUN):
             cmd = 'cp %s %s' % (self.SRC, self.SECRUN)
@@ -86,9 +90,6 @@ class SEC(base.Base):
         prompt ='Do you want to start (%s)? (Y/n): ' % (self.__class__.__name__)
         ans = self.p.getinput(prompt)
         if ans == 'Y' or ans == 'y' or ans == '':
-            IMGSTAT="%s:%s" % (self.img, self.getVersion())
-            if not self.validate_loaded(self.__class__.__name__, self.IMGSTAT):
-                self.dcload(self.homefull, self.tarfile)
             if not self.validate_running(self.__class__.__name__, self.homefull, self.SECSTAT):
                 cmd = 'systemctl start secstart'
                 self.gencmd(cmd)

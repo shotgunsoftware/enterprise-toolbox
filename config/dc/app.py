@@ -88,15 +88,26 @@ class App(base.Base):
 
     def startover(self, sitetype):
         '''Start over'''
-        if sitetype == "production":
-            yml = self.production_yml_home + self.gdata.yml
-        else:
-            yml = self.staging_yml_home + self.gdata.yml
         prompt ='Do you want to start from a fresh %s on %s site? (Y/n): ' % (self.gdata.yml, sitetype)
         ans = self.p.getinput(prompt)
         if ans == 'Y' or ans == 'y' or ans == '':
-            ymlold = self.homefull+'example/' + self.gdata.yml
-            cmd='cp  %s %s' % (ymlold, yml)
+            yml = ""
+            if sitetype == "production":
+                yml = self.production_yml_home + self.gdata.yml
+                ymlhome = self.production_yml_home
+            else:
+                yml = self.staging_yml_home + self.gdata.yml
+                ymlhome = self.staging_yml_home
+
+            if not self.p.validate_file(yml):
+                cmd = 'rm -f %s' % ymlhome
+                self.gencmd(cmd)
+            if not self.p.validate_folder(ymlhome):
+                cmd = 'mkdir %s' % ymlhome
+                self.gencmd(cmd)
+
+            ymlexample = self.homefull+'example/' + self.gdata.yml
+            cmd='cp %s %s' % (ymlexample, yml)
             self.gencmd(cmd)
 
     def setupsite(self, sitetype, ymlhome, yml):
@@ -150,7 +161,7 @@ class App(base.Base):
                     self.p.printfail('%s doesn\'t exist' % (yml))
                     self.p.exit(0)
                 else:
-                    self.p.printhead("Change media folder to %s." % (self.gdata.SITE_URL))
+                    self.p.printhead("Change media folder to %s." % (ans))
                     OVOL=".\/media:\/media"
                     NVOL="%s:\/media" % (ans.replace('/','\/'))
                     self.ymlreplace(OVOL, NVOL,yml)
@@ -235,8 +246,7 @@ class App(base.Base):
         if self.p.validate_file(PGSQLFILE):
             self.p.printhead("Add Host IP and Docker Container IP to pg_hba.conf")
             ips = self.getipv4()
-            ips.append(['172.17.0.1', 16])
-            ips.append(['172.18.0.1', 16])
+            ips.append(['172.0.0.1', 8])
             print ips
             for ip in ips:
                 i=self.getsubnet(ip)
@@ -257,7 +267,7 @@ class App(base.Base):
         '''Get database server ip'''
         prompt ='Please input your database host (ip address or hostname):'
         self.gdata.hostip = self.p.getinput(prompt)
-        while self.gdata.hostip == "": 
+        while self.gdata.hostip == "" or not re.match('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', self.gdata.hostip): 
             self.gdata.hostip = self.p.getinput(prompt)
 
         prompt ='Please input your database password:'
