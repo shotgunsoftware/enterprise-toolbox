@@ -356,7 +356,7 @@ class App(base.Base):
             if self.p.validate_folder(self.production_yml_home): 
                 if self.p.validate_file(self.production_yml_home + self.gdata.yml):
                     IMGSTAT="%s                 %s" % (self.img, self.getVersion())
-                    if self.validate_loaded(self.__class__.__name__, IMGSTAT):
+                    if not self.validate_loaded(self.__class__.__name__, IMGSTAT):
                         if not self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT) and not self.validate_running(self.__class__.__name__, self.production_yml_home, self.STAT1):
                             self.dcup(self.production_yml_home, 'production')
                         else:
@@ -371,7 +371,7 @@ class App(base.Base):
             if self.p.validate_folder(self.staging_yml_home): 
                 if self.p.validate_file(self.staging_yml_home + self.gdata.yml):
                     IMGSTAT="%s                 %s" % (self.img, self.getVersion())
-                    if self.validate_loaded(self.__class__.__name__, IMGSTAT):
+                    if not self.validate_loaded(self.__class__.__name__, IMGSTAT):
                         if not self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT) and not self.validate_running(self.__class__.__name__, self.staging_yml_home, self.STAT2):
                             self.dcup(self.staging_yml_home, 'staging')
                         else:
