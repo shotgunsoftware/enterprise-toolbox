@@ -2,7 +2,8 @@
 # Logs are usually found at /var/rails/<application_name>/shared/log/
 # More information on logs can be found at https://support.shotgunsoftware.com/hc/en-us/articles/219030198-Production-log-for-Shotgun-Enterprise
 #
-# Usage: gunzip -c production.log.gz | ruby shotgun_log_analyzer.rb > report.txt
+# Classic usage: gunzip -c production.log.gz | ruby shotgun_log_analyzer.rb > report.txt
+# Docker usage (for the last 2m): sudo docker logs --since 2m <container_id> | ruby shotgun_log_analyzer.rb > report.txt
 #
 # Requires: ruby 1.9.3 or higher
 
