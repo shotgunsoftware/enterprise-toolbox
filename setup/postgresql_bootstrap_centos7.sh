@@ -110,6 +110,9 @@ END_OF_HBA_CONF"
 
   # Log message is produced when a session waits longer than deadlock_timeout to acquire a lock.
   sudo sed -i -e "s/.*log_lock_waits.*/log_lock_waits = on/" ${PGDATA}/postgresql.conf
+  
+  # Set a default statement timeout to 5 minutes
+  sudo sed -i -e "s/.*statement_timeout.*/statement_timeout = 5min/" ${PGDATA}/postgresql.conf
 
   # make sure postgres starts up at boot
   sudo systemctl enable postgresql-${SG_PGSQL_VER_DOT}.service
