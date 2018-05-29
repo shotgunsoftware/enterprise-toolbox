@@ -139,7 +139,7 @@ function validate {
     # ADDITIONAL INFO
     echo -e "\nADDITIONAL INFO"
     echo "==============="
-    s3_hosts=(sg-media-usor-01 sg-media-tokyo sg-media-ireland)
+    s3_hosts=(sg-media-usor-01 sg-media-tokyo sg-media-ireland sg-media-saopaulo)
     for i in ${s3_hosts[@]}; do
         if ( curl -sS  https://${i}.s3.amazonaws.com|grep "AccessDenied">/dev/null );then
             export OVER="OK"
