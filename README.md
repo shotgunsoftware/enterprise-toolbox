@@ -27,7 +27,7 @@ This ruby script is also a prod log analyzer, but instead of focusing solely on 
 
 Usage help can be obtained with `./log_chop.rb -h`, but here's a quick quide for order of operations:
 
-Parsing a log can be time-consuming if looking at an entire day's worth of activity, so this script is intended to both crop a log file to interesting time periods, and to analyze both full and cropped log files, especially if you already know the timestamps of the 503 incidents. First thing to do is to get the range of the log file in question with the `-r` option.  This option will parse a log and quickly give you the range of time (start and end, in UTC) covered in the log. For example:
+Parsing a log can be time-consuming if looking at an entire day's worth of activity, so this script is intended to both chop a log file to interesting time periods, and to analyze both full and chopped log files, especially if you already know the timestamps of the 503 incidents. First thing to do is to get the range of the log file in question with the `-r` option.  This option will parse a log and quickly give you the range of time (start and end, in UTC) covered in the log. For example:
 
 ```
 ./log_chop.rb -r com_shotgunstudio_mystudio_production.log-20190130.gz
@@ -37,7 +37,7 @@ Parsing a log can be time-consuming if looking at an entire day's worth of activ
 time spent parsing log: 62.66 sec
 ```
 
-With that output, you can then chop the full log into a smaller piece for analysis with the `-s` and `-e` options. In this example, we know that we experienced 503s at around 09:27 UTC, so it would be good to analyze the half-hour or so (or more, depending) surrounding the incident. We'll crop from 09:00 to 10:00.
+With that output, you can then chop the full log into a smaller piece for analysis with the `-s` and `-e` options. In this example, we know that we experienced 503s at around 09:27 UTC, so it would be good to analyze the half-hour or so (or more, depending) surrounding the incident. We'll chop from 09:00 to 10:00.
 
 ```
 ./log_chop -s '2019-Jan-29 09:00:00' -e '2019-Jan-29 10:00:00' com_shotgunstudio_mystudio_production.log-20190130.gz
@@ -48,7 +48,7 @@ parsing log elapsed time: 177.29 sec
 new slice file: timber_20190129_090000_to_20190129_100000.log.gz
 ```
 
-The `timber_<timestamp>_to_<timestamp>.log.gz` files are the cropped log files that result from using the `-s/-e` options. Due to smaller size, they will be inherently quicker to analyze.
+The `timber_<timestamp>_to_<timestamp>.log.gz` files are the chopped log files that result from using the `-s/-e` options. Due to smaller size, they will be inherently quicker to analyze.
 
 We can employ the `-t` and `-u` options to perform the analysis. `-t` gives a per-minute global summary, while `-u` will give a per-user summary _for the period of time encompassed by the log file being analyzed_. So if you're looking at a whole day's log, the `-u` option will be less useful than looking at an hour or couple minutes' slice of time.
 
