@@ -167,7 +167,7 @@ def print_range(logfile)
   t1 = Time.now
   f_utc, l_utc, duration = get_range(logfile)
   t2 = Time.now
-  puts "            log begins: #{f_utc.strftime('%Y-%b-%d %H:%M:%S %Z')} / #{f_utc.getlocal.strftime('%Y-%b-%d %H:%M:%S %Z (%z)')}"
+  puts "            log starts: #{f_utc.strftime('%Y-%b-%d %H:%M:%S %Z')} / #{f_utc.getlocal.strftime('%Y-%b-%d %H:%M:%S %Z (%z)')}"
   puts "              log ends: #{l_utc.strftime('%Y-%b-%d %H:%M:%S %Z')} / #{l_utc.getlocal.strftime('%Y-%b-%d %H:%M:%S %Z (%z)')}"
   puts "        total duration: #{Time.at(duration).utc.strftime('%Hh %Mm %S.%Ls')}"
   puts "time spent parsing log: #{(t2 - t1).round(2)} sec\n\n"
