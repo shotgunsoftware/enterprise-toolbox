@@ -30,7 +30,7 @@ Usage help can be obtained with `./log_chop.rb -h`, but here's a quick quide for
 Parsing a log can be time-consuming if looking at an entire day's worth of activity, so this script is intended to both crop a log file to interesting time periods, and to analyze both full and cropped log files, especially if you already know the timestamps of the 503 incidents. First thing to do is to get the range of the log file in question with the `-r` option.  This option will parse a log and quickly give you the range of time (start and end, in UTC) covered in the log. For example:
 
 ```
-./log_chop -r com_shotgunstudio_mystudio_production.log-20190130.gz
+./log_chop.rb -r com_shotgunstudio_mystudio_production.log-20190130.gz
             log begins: 2019-Jan-29 03:50:06 UTC / 2019-Jan-28 19:50:06 PST (-0800)
               log ends: 2019-Jan-30 03:29:15 UTC / 2019-Jan-29 19:29:15 PST (-0800)
         total duration: 23h 39m 09.000s
