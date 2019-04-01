@@ -6,6 +6,7 @@
 # and spit out relevant info
 
 $color_text = true
+$debug_calc = false
 
 # for parsing options
 require 'optparse'
@@ -157,6 +158,7 @@ def get_range(logfile)
     f_utc = Time.parse(first_line + ' UTC')
     l_utc = Time.parse(last_line + ' UTC')
     duration = l_utc - f_utc
+    gz.close
   end
   [f_utc, l_utc, duration]
 rescue StandardError => e
@@ -204,8 +206,13 @@ def do_chop(options, logfile)
           sc = l[13..14]
           timestamp = Time.new(yr, mo, dy, hr, mn, sc, -0)
 
+          # toss information to the right of '--' in a log line, we don't need
+          # it and it'll speed up analysis and chopping
+          l = "#{l.split(' --')[0].chomp}\n"
           gzd.write l if timestamp.between?(start_time, end_time)
+          break if timestamp > end_time
         end
+        gzs.close
         gzd.close
       end
 
@@ -222,8 +229,6 @@ def count(line_parts, duration_index)
   timestamp = Time.parse(line_parts[0..2].join(' ') + ' UTC')
   duration = line_parts[duration_index].tap { |t| t.slice!('ms') }.to_f unless duration_index.nil?
   user_index = line_parts.index { |p| p.include?('user=') }
-  user_type = line_parts[user_index].split('=')[0]
-  user_type = 'client_user' if user_type.nil? && line_parts[user_index + 1] == '--'
   user_name = line_parts[user_index].split('=')[1]
   type_index = line_parts.index { |p| p.start_with?('INFO:') } + 1
   type = line_parts[type_index].tap { |t| t.slice!(':') } unless type_index.nil?
@@ -234,7 +239,6 @@ def count(line_parts, duration_index)
   {
     timestamp: timestamp,
     user_name: user_name,
-    user_type: user_type,
     duration: duration,
     parent_type: parent_type,
     sub_type: sub_type
@@ -253,7 +257,12 @@ def analyze(logfile)
     t1 = Time.now
     gz.each_line do |l|
       line_parts = l.split
+      # we only care about INFO lines
       if l.include?('INFO:')
+        # find the index of the line split array that contains the time taken.
+        # ignore line if not present.
+
+        # this could maybe be faster; do a cheaper regex?
         duration_index = line_parts.index { |p| p =~ /\d+\.\d+ms/ }
         data[idx.to_s] = count(line_parts, duration_index) unless duration_index.nil?
       end
@@ -267,7 +276,6 @@ end
 
 def calc_per_user(data, scope, options)
   t1 = Time.now
-  debug_calc = false
   start_time = data.first[1][:timestamp]
 
   # stolen tip about how to create an auto-vivifying hash
@@ -278,86 +286,86 @@ def calc_per_user(data, scope, options)
     # initialize some defaults for each new username. If the key that we want to
     # assign a value to is still a Hash, it's uninitialized.
 
-    puts "doing v! -- #{v}" if debug_calc
-    puts "per_user[#{v[:user_type]}][#{v[:user_name]}][#{v[:parent_type]}] -- #{per_user[v[:user_type]][v[:user_name]][:controller]}" if debug_calc
-    if per_user[v[:user_type]][v[:user_name]][:controller].is_a?(Hash)
-      per_user[v[:user_type]][v[:user_name]][:controller] = 0.0
-      per_user[v[:user_type]][v[:user_name]][:requests] = 0
-      per_user[v[:user_type]][v[:user_name]][:total] = 0.0
-      puts "initializing #{v[:user_name]} controller: #{per_user[v[:user_type]][v[:user_name]][:controller]}" if debug_calc
+    puts "doing v! -- #{v}" if $debug_calc
+    puts "per_user[#{v[:user_name]}][#{v[:parent_type]}] -- #{per_user[v[:user_name]][:controller]}" if $debug_calc
+    if per_user[v[:user_name]][:controller].is_a?(Hash)
+      per_user[v[:user_name]][:controller] = 0.0
+      per_user[v[:user_name]][:requests] = 0
+      per_user[v[:user_name]][:total] = 0.0
+      puts "initializing #{v[:user_name]} controller: #{per_user[v[:user_name]][:controller]}" if $debug_calc
     else
-      puts 'not initializing.' if debug_calc
+      puts 'not initializing.' if $debug_calc
     end
 
     # if the process type hasn't been recorded yet, initialize it for user_name
-    puts "per_user[#{v[:user_type]}][#{v[:user_name]}][#{v[:parent_type]}] -- #{per_user[v[:user_type]][v[:user_name]][v[:parent_type]]}" if debug_calc
-    if per_user[v[:user_type]][v[:user_name]][v[:parent_type]].is_a?(Hash)
-      per_user[v[:user_type]][v[:user_name]][v[:parent_type]] = v[:duration]
-      puts "initializing #{v[:user_name]}, #{v[:parent_type]}: #{v[:duration]}" if debug_calc
+    puts "per_user[#{v[:user_name]}][#{v[:parent_type]}] -- #{per_user[v[:user_name]][v[:parent_type]]}" if $debug_calc
+    if per_user[v[:user_name]][v[:parent_type]].is_a?(Hash)
+      per_user[v[:user_name]][v[:parent_type]] = v[:duration]
+      puts "initializing #{v[:user_name]}, #{v[:parent_type]}: #{v[:duration]}" if $debug_calc
     else
       # if the category exists, sum up. these are the building blocks for the
       # totals we want to generate later
-      foo = per_user[v[:user_type]][v[:user_name]][v[:parent_type]] if debug_calc
-      per_user[v[:user_type]][v[:user_name]][v[:parent_type]] += v[:duration]
-      puts "new value for #{v[:user_name]}, #{v[:parent_type]}: adding #{v[:duration]} to #{foo} -- #{per_user[v[:user_type]][v[:user_name]][v[:parent_type]]}" if debug_calc
+      foo = per_user[v[:user_name]][v[:parent_type]] if $debug_calc
+      per_user[v[:user_name]][v[:parent_type]] += v[:duration]
+      puts "new value for #{v[:user_name]}, #{v[:parent_type]}: adding #{v[:duration]} to #{foo} -- #{per_user[v[:user_type]][v[:user_name]][v[:parent_type]]}" if $debug_calc
     end
 
-    per_user[v[:user_type]][v[:user_name]][:total] += v[:duration]
+    per_user[v[:user_name]][:total] += v[:duration]
 
     next unless v[:parent_type].to_s.end_with?('Controller')
-    bar = per_user[v[:user_type]][v[:user_name]][:controller] if debug_calc
-    per_user[v[:user_type]][v[:user_name]][:controller] += v[:duration]
-    per_user[v[:user_type]][v[:user_name]][:requests] += 1
-    puts "per_user[#{v[:user_type]}][#{v[:user_name]}][:controller] was #{bar}, now #{per_user[v[:user_type]][v[:user_name]][:controller]}" if debug_calc
+    bar = per_user[v[:user_name]][:controller] if $debug_calc
+    per_user[v[:user_name]][:controller] += v[:duration]
+    per_user[v[:user_name]][:requests] += 1
+    puts "per_user[#{v[:user_name]}][:controller] was #{bar}, now #{per_user[v[:user_type]][v[:user_name]][:controller]}" if $debug_calc
   end
 
   main_categories = [:controller, :requests, 'Passenger', 'CRUD', 'SQL']
 
   puts "#{start_time}: "
-  per_user.each do |user_type, users|
-    arr = users.sort_by { |_key, value| value[:total] }.reverse
-    puts "#{user_type}: (% of theoretical Passenger queue limit of 600 seconds; #{options.threads} threads * #{scope} seconds)"
-    arr.each_with_index do |i, idx|
-      next if options.complete == false && idx >= 5
-      formatted_times = {}
-      main_categories.each do |category|
-        if category == :requests
-          formatted_times[category.to_s] = "#{i[1][category]} |"
-        else
-          i[1][category] = 0.0 if i[1][category].is_a?(Hash)
-          ftime = format_time(i[1][category] / 1000).to_s
-          duration_ms = i[1][category].to_i
-          # (((total ms / (scope in s * 1000)) / 10 passenger queues) * 100 for percent)
-          percent = (((i[1][category] / (scope * 1000)) / options.threads) * 100).round(2).to_s
-          if $color_text
-            percent = if percent.to_f > 69
-                        percent.yellow
-                      elsif percent.to_f > 89
-                        percent.red
-                      else
-                        percent.green
-                      end
-          end
-          formatted_times[category.to_s] = "#{duration_ms}ms #{ftime}s #{percent}% "
-          formatted_times[category.to_s] << '|' unless category.to_s == main_categories.last.to_s
-        end
-      end
 
-      stats_output = "#{i[0]}: "
-      formatted_times.each do |cat, times|
-        next if cat == 'Passenger' && options.analyze_user && options.analyze_time
-        stats_output << if $color_text
-                          "#{cat.cyan}: #{times} "
-                        else
-                          "#{cat}: #{times} "
-                  end
+  arr = per_user.sort_by { |_key, value| value[:total] }.reverse
+  puts "(% of theoretical Passenger queue limit of 600 seconds; #{options.threads} threads * #{scope} seconds)"
+  arr.each_with_index do |i, idx|
+    break if options.complete == false && idx >= 5
+    formatted_times = {}
+    main_categories.each do |category|
+      if category == :requests
+        formatted_times[category.to_s] = "#{i[1][category]} |"
+      else
+        i[1][category] = 0.0 if i[1][category].is_a?(Hash)
+        ftime = format_time(i[1][category] / 1000).to_s
+        duration_ms = i[1][category].to_i
+        # (((total ms / (scope in s * 1000)) / 10 passenger queues) * 100 for percent)
+        percent = (((i[1][category] / (scope * 1000)) / options.threads) * 100).round(2).to_s
+        if $color_text
+          percent = if percent.to_f > 69
+                      percent.yellow
+                    elsif percent.to_f > 89
+                      percent.red
+                    else
+                      percent.green
+                    end
+        end
+        formatted_times[category.to_s] = "#{duration_ms}ms #{ftime}s #{percent}% "
+        formatted_times[category.to_s] << '|' unless category.to_s == main_categories.last.to_s
       end
-      puts stats_output
     end
-    puts "\n"
+
+    stats_output = "#{i[0]}: "
+    formatted_times.each do |cat, times|
+      next if cat == 'Passenger' && options.analyze_user && options.analyze_time
+      stats_output << if $color_text
+                        "#{cat.cyan}: #{times} "
+                      else
+                        "#{cat}: #{times} "
+                end
+    end
+    puts stats_output
   end
+  puts "\n"
+
   t2 = Time.now
-  puts "time spent calulating user time: #{(t2 - t1).round(2)} sec\n" if debug_calc
+  puts "time spent calulating user time: #{(t2 - t1).round(2)} sec\n" if $debug_calc
 end
 
 def calc_per_time(data, duration, threads)
@@ -438,26 +446,32 @@ def calc_user_per_time(data, _duration, options)
   slice_key = start_time.to_s
   minute_data = {}
   data.each do |d|
-    # puts d if debug_calc
+    # puts d if $debug_calc
     minute_data[slice_key] = {} if minute_data[slice_key].nil?
     if d[1][:timestamp] < end_time
       minute_data[slice_key][d[0]] = d[1]
-      # puts "add to #{slice_key}" if debug_calc
+      # puts "add to #{slice_key}" if $debug_calc
     else
       slice_key = d[1][:timestamp].to_s
       start_time = d[1][:timestamp]
       end_time = start_time + 60
-      # puts "new key: #{slice_key}" if debug_calc
+      # puts "new key: #{slice_key}" if $debug_calc
       minute_data[slice_key] = {} if minute_data[slice_key].nil?
       minute_data[slice_key][d[0]] = d[1]
     end
   end
   t2 = Time.now
-  puts "time spent dividing data into per-minute time: #{(t2 - t1).round(2)} sec\n\n"
+  div_string = "time spent dividing data into per-minute time: #{(t2 - t1).round(2)} sec\n\n"
 
+  t1 = Time.now
   minute_data.each do |minute|
     calc_per_user(minute[1], 60, options)
   end
+  t2 = Time.now
+  proc_string = "time spent processing per-minute time: #{(t2 - t1).round(2)} sec\n\n"
+
+  puts div_string
+  puts proc_string
 end
 
 options = OptParse.parse(ARGV)
