@@ -32,6 +32,7 @@ fi
 
 # Os release number checker
 MOSR=`rpm -q --qf "%{VERSION}" $(rpm -q --whatprovides redhat-release)`
+MOSR=$(echo $MOSR | head -c 1)
 
 if (( $(echo "$MOSR == 7" |bc -l) )); then
    echo "RHEL 7/CentOS 7 detected ... continue installation"
