@@ -45,14 +45,13 @@ fi
 # ENVIRONMENT VARIABLES
 #
 
-# Postgres 9.6
-export SG_PGSQL_VER=96
-export SG_PGSQL_VER_DOT=9.6
-export SG_PGSQL_DISTRO=pgdg-${DISTRO}${SG_PGSQL_VER}-${SG_PGSQL_VER_DOT}-3.noarch.rpm
+# Postgres 11
+export SG_PGSQL_VER=11
+export SG_PGSQL_DISTRO=pgdg-redhat-repo-latest.noarch.rpm
 
 # You can modify this folder to initialize a Shotgun ready database in a custom location.
 # You will also need to modify your systemd configuration for the PostgreSQL service so the good data folder is used.
-export PGDATA=/var/lib/pgsql/${SG_PGSQL_VER_DOT}/data
+export PGDATA=/var/lib/pgsql/${SG_PGSQL_VER}/data
 export DOWNLOAD_DIR=~
 
 function validate {
@@ -73,7 +72,7 @@ function install_pgdg() {
   sudo yum install -y wget
 
   cd $DOWNLOAD_DIR
-  wget https://download.postgresql.org/pub/repos/yum/${SG_PGSQL_VER_DOT}/redhat/rhel-7-x86_64/${SG_PGSQL_DISTRO}
+  wget https://download.postgresql.org/pub/repos/yum/${SG_PGSQL_VER}/redhat/rhel-7-x86_64/${SG_PGSQL_DISTRO}
   sudo rpm -Uvh --replacepkgs ${SG_PGSQL_DISTRO}
 }
 
@@ -81,7 +80,7 @@ function install_postgresql () {
   echo ======= INSTALLING POSTGRESQL SERVER =======
   sudo yum install -y postgresql${SG_PGSQL_VER} postgresql${SG_PGSQL_VER}-server postgresql${SG_PGSQL_VER}-contrib pg_top${SG_PSQL_VER}
 
-  sudo -u postgres /usr/pgsql-${SG_PGSQL_VER_DOT}/bin/initdb --locale 'en_US.UTF-8' --pgdata $PGDATA
+  sudo -u postgres /usr/pgsql-${SG_PGSQL_VER}/bin/initdb --locale 'en_US.UTF-8' --pgdata $PGDATA
 }
 
 function configure_postgresql () {
@@ -116,9 +115,9 @@ END_OF_HBA_CONF"
   sudo sed -i -e "s/.*statement_timeout.*/statement_timeout = 5min/" ${PGDATA}/postgresql.conf
 
   # make sure postgres starts up at boot
-  sudo systemctl enable postgresql-${SG_PGSQL_VER_DOT}.service
-  sudo systemctl start postgresql-${SG_PGSQL_VER_DOT}.service
-  sudo service postgresql-${SG_PGSQL_VER_DOT} restart
+  sudo systemctl enable postgresql-${SG_PGSQL_VER}.service
+  sudo systemctl start postgresql-${SG_PGSQL_VER}.service
+  sudo service postgresql-${SG_PGSQL_VER} restart
 }
 
 function initialize_db () {
@@ -134,7 +133,7 @@ function initialize_db () {
   sudo -u postgres psql -c "CREATE USER shotgun WITH SUPERUSER PASSWORD '${PG_PASS}';"
   sudo -u postgres psql -c "ALTER USER postgres PASSWORD '${PG_PASS}'"
 
-  sudo service postgresql-${SG_PGSQL_VER_DOT} restart
+  sudo service postgresql-${SG_PGSQL_VER} restart
 }
 
 validate
