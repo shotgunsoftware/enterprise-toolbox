@@ -1,4 +1,6 @@
-# ShotGrid Enterprise Toolbox This repository contains various tools that can be useful for ShotGrid System Administrators
+# ShotGrid Enterprise Toolbox
+This repository contains various tools that can be useful for ShotGrid System Administrators
+
 ## How to use
 Clone this repository and follow the instructions related to the tools you want to use.
 
