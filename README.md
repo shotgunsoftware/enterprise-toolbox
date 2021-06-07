@@ -1,21 +1,21 @@
-# Shotgun Enterprise Toolbox This repository contains various tools that can be useful for Shotgun System Administrators
+# ShotGrid Enterprise Toolbox This repository contains various tools that can be useful for ShotGrid System Administrators
 ## How to use
 Clone this repository and follow the instructions related to the tools you want to use.
 
 ## Basic Monitoring
-Scripts and cron jobs that can be used to gather helpful information about Shotgun health.
+Scripts and cron jobs that can be used to gather helpful information about ShotGrid health.
 
 [Basic Monitoring](./basic_monitoring)
 
 ## Troubleshooting
 
-### Shotgun Log Analyzer
+### ShotGrid Log Analyzer
 Ruby script that produces a report on underlying psql hot points, heaviest users
 and scripts, and slowest queries. The output of this script is a good starting
 point to troubleshoot performance issues related to usage patterns. Instructions
 in the script header.
 
-[Shotgun Log Analyzer](./troubleshooting/shotgun_log_analyzer.rb)
+[ShotGrid Log Analyzer](./troubleshooting/shotgun_log_analyzer.rb)
 
 ### Log Chop
 
@@ -30,7 +30,7 @@ Usage help can be obtained with `./log_chop.rb -h`, but here's a quick quide for
 Parsing a log can be time-consuming if looking at an entire day's worth of activity, so this script is intended to both chop a log file to interesting time periods, and to analyze both full and chopped log files, especially if you already know the timestamps of the 503 incidents. First thing to do is to get the range of the log file in question with the `-r` option.  This option will parse a log and quickly give you the range of time (start and end, in UTC) covered in the log. For example:
 
 ```
-./log_chop.rb -r com_shotgunstudio_mystudio_production.log-20190130.gz
+./log_chop.rb -r com_shotgridstudio_mystudio_production.log-20190130.gz
             log begins: 2019-Jan-29 03:50:06 UTC / 2019-Jan-28 19:50:06 PST (-0800)
               log ends: 2019-Jan-30 03:29:15 UTC / 2019-Jan-29 19:29:15 PST (-0800)
         total duration: 23h 39m 09.000s
@@ -40,7 +40,7 @@ time spent parsing log: 62.66 sec
 With that output, you can then chop the full log into a smaller piece for analysis with the `-s` and `-e` options. In this example, we know that we experienced 503s at around 09:27 UTC, so it would be good to analyze the half-hour or so (or more, depending) surrounding the incident. We'll chop from 09:00 to 10:00.
 
 ```
-./log_chop -s '2019-Jan-29 09:00:00' -e '2019-Jan-29 10:00:00' com_shotgunstudio_mystudio_production.log-20190130.gz
+./log_chop -s '2019-Jan-29 09:00:00' -e '2019-Jan-29 10:00:00' com_shotgridstudio_mystudio_production.log-20190130.gz
 looking at time from 2019-01-29 09:00:00 UTC to 2019-01-29 10:00:00 UTC.
 total window: 0 days, 1h 0m 0s
 parsing log elapsed time: 177.29 sec
@@ -57,7 +57,7 @@ On top of the previous options, using `-tu` together will give both a per-minute
 For example:
 
 ```
-./log_chop -tu com_shotgunstudio_mystudio_production.log-20190130.gz
+./log_chop -tu com_shotgridstudio_mystudio_production.log-20190130.gz
 ```
 
 **Note**: If you have more than 10 Passenger threads configured for your site, make sure to use the `-p` option so that the stats are calculated correctly; otherwise the stats will be generated with the assumption of a default 10 threads.
@@ -79,9 +79,9 @@ TODO:
 - add an option for pure csv output instead of text intended for terminal output.
 - combine user and api_user, as it's not terribly important to have them separated.
 
-[Shotgun Log Analyzer](./troubleshooting/log_chop.rb)
+[ShotGrid Log Analyzer](./troubleshooting/log_chop.rb)
 
 ## Docker Setup
-Create setup menu for Shotgun Docker version.
+Create setup menu for ShotGrid Docker version.
 
 [Config](./config)
