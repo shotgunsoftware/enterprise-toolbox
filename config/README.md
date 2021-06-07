@@ -4,13 +4,13 @@
  
 ##### 0: Exit
 ##### -------------- System  ------------------
-##### 1: Create shotgun user & Configure system security.
+##### 1: Create ShotGrid user & Configure system security.
 ##### -------------- Configuration  -----------
-##### 2: Extract & Load Shotgun Images
-##### 3: Configure Shotgun Configuration YML
-##### 4: Start/Stop Shotgun Services
+##### 2: Extract & Load ShotGrid Images
+##### 3: Configure ShotGrid Configuration YML
+##### 4: Start/Stop ShotGrid Services
 ##### -------------- Helper -------------------
-##### 5: Shotgun Rake Commands
+##### 5: ShotGrid Rake Commands
 ##### 6: Tools
 ##### 7: Docker Commands
 ##### Please Select:
