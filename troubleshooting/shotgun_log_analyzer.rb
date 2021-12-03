@@ -1,6 +1,5 @@
 # Analyse shotgun production logs to produce a report on slow SQL queries.
 # Logs are usually found at /var/rails/<application_name>/shared/log/
-# More information on logs can be found at https://support.shotgunsoftware.com/hc/en-us/articles/219030198-Production-log-for-Shotgun-Enterprise
 #
 # Classic usage: gunzip -c production.log.gz | ruby shotgun_log_analyzer.rb > report.txt
 # Docker usage (for the last hour): sudo docker logs --since 1h <container_id> | ruby shotgun_log_analyzer.rb > report.txt
