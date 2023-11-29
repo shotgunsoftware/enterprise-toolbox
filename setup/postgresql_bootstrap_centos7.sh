@@ -45,8 +45,8 @@ fi
 # ENVIRONMENT VARIABLES
 #
 
-# Postgres 11
-export SG_PGSQL_VER=11
+# Postgres 12
+export SG_PGSQL_VER=12
 export SG_PGSQL_DISTRO=pgdg-redhat-repo-latest.noarch.rpm
 
 # You can modify this folder to initialize a Shotgun ready database in a custom location.
